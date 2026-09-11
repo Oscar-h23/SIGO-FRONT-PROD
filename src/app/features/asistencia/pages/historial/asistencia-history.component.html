@@ -1,0 +1,579 @@
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <span class="eyebrow">
+        TRAZABILIDAD
+      </span>
+
+      <h1>
+        Historial de asistencia
+      </h1>
+
+      <p>
+        Consulta los registros, ausencias y
+        evidencias asociadas a cada turno.
+      </p>
+    </div>
+  </div>
+
+  <!-- ========================= -->
+  <!-- FILTROS                   -->
+  <!-- ========================= -->
+
+  <section class="card filters">
+
+    <div class="form-field">
+      <label>Desde</label>
+      <input
+        class="form-control"
+        type="date"
+        [(ngModel)]="inicio"
+      >
+    </div>
+
+    <div class="form-field">
+      <label>Hasta</label>
+      <input
+        class="form-control"
+        type="date"
+        [(ngModel)]="fin"
+      >
+    </div>
+
+    <div class="form-field">
+      <label>Plaza</label>
+      <select
+        class="form-control"
+        [(ngModel)]="plazaId"
+        (ngModelChange)="cambiarPlaza()"
+      >
+        <option [ngValue]="null">
+          Todas las plazas
+        </option>
+
+        @if (loadingPlazas()) {
+          <option disabled>
+            Cargando plazas...
+          </option>
+        } @else {
+          @for (
+            plaza of plazas();
+            track plaza.id
+          ) {
+            <option [ngValue]="plaza.id">
+              {{ plaza.codigo }}
+            </option>
+          }
+        }
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label>Turno</label>
+      <select
+        class="form-control"
+        [(ngModel)]="turnoFiltro"
+        (ngModelChange)="cambiarTurno()"
+      >
+        <option value="">
+          Todos los turnos
+        </option>
+        <option value="A">Turno A</option>
+        <option value="B">Turno B</option>
+        <option value="C">Turno C</option>
+      </select>
+    </div>
+
+    <button
+      class="btn btn-primary filter-search-btn"
+      type="button"
+      (click)="cargar()"
+      [disabled]="loading()"
+    >
+      {{ loading() ? 'Buscando...' : 'Buscar' }}
+    </button>
+
+  </section>
+
+
+  <!-- ========================= -->
+  <!-- ERROR                     -->
+  <!-- ========================= -->
+
+  @if (error()) {
+
+    <div class="alert alert-error history-alert">
+      {{ error() }}
+    </div>
+
+  }
+
+
+  <!-- ========================= -->
+  <!-- TABLA                     -->
+  <!-- ========================= -->
+
+  <section class="card table-card">
+
+    @if (loading()) {
+
+      <div class="empty-state">
+        Cargando historial…
+      </div>
+
+    } @else if (!registrosFiltrados().length) {
+
+      <div class="empty-state">
+
+        <strong>
+          No hay registros para mostrar
+        </strong>
+
+        <span>
+          No se encontraron asistencias
+          para los filtros seleccionados.
+        </span>
+
+      </div>
+
+    } @else {
+
+      <div class="table-wrap">
+
+        <table>
+
+          <!-- CABECERA -->
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Plaza</th>
+              <th>Turno</th>
+              <th>Controlador</th>
+              <th>Personal</th>
+              <th>Apoyo</th>
+              <th>Asistencia</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+
+
+          <!-- CONTENIDO -->
+          <tbody>
+
+            @for (
+              r of registrosPaginados();
+              track r.id
+            ) {
+
+              <!-- ========================= -->
+              <!-- FILA PRINCIPAL            -->
+              <!-- ========================= -->
+
+              <tr class="main-row">
+
+                <!-- FECHA -->
+                <td>
+
+                  <strong>
+                    {{
+                      r.fecha
+                        | date:'dd/MM/yyyy':'UTC'
+                    }}
+                  </strong>
+</td>
+
+
+                <!-- PLAZA -->
+                <td>
+
+                  <span class="plaza-chip">
+                    {{ r.plaza }}
+                  </span>
+
+                </td>
+
+
+                <!-- TURNO -->
+                <td>
+
+                  <strong>
+                    {{ r.turno }}
+                  </strong>
+
+                </td>
+
+
+                <!-- CONTROLADOR -->
+                <td class="controller">
+
+                  {{ r.controlador }}
+
+                </td>
+
+
+                <!-- PERSONAL -->
+                <td>
+
+                  {{ r.presentes }}
+                  /
+                  {{ r.programados }}
+
+                  <small>
+                    {{ r.ausentes }}
+                    ausente(s)
+                  </small>
+
+                </td>
+
+
+                <!-- APOYO -->
+                <td>
+
+                  <span class="support-chip">
+                    {{ r.apoyoSolicitado  }}
+                  </span>
+
+                </td>
+
+
+                <!-- PORCENTAJE -->
+                <td>
+
+                  <span
+                    class="percent"
+                    [ngClass]="
+                      badgeClass(
+                        r.porcentaje
+                      )
+                    "
+                  >
+
+                    {{
+                      r.porcentaje
+                        .toFixed(1)
+                    }}%
+
+                  </span>
+
+                </td>
+
+
+                <!-- ACCIONES -->
+                <td>
+
+                  <div class="action-buttons">
+
+                    <!-- VER DETALLE -->
+                    <button
+                      class="action-btn action-detail"
+                      type="button"
+                      (click)="abrirDetalle(r)"
+                    >
+                      Detalle
+                    </button>
+
+
+                    <!-- EDITAR -->
+                    <a
+                      class="action-btn action-edit"
+                      [routerLink]="[
+                        '/asistencia/historial/editar',
+                        r.id
+                      ]"
+                    >
+                      Editar
+                    </a>
+                    <!-- GENERAR PDF -->
+                      <button
+                        class="action-btn action-pdf"
+                        type="button"
+                        (click)="generarPdf(r)"
+                        [disabled]="generandoPdfId() !== null"
+                      >
+                        @if (
+                          generandoPdfId() === r.id
+                        ) {
+                          Generando...
+                        } @else {
+                          Generar PDF
+                        }
+                      </button>
+
+
+                  </div>
+
+                </td>
+
+              </tr>
+
+
+              
+
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+      <div class="pagination-bar">
+        <div class="pagination-info">
+          Mostrando
+          <strong>{{ primerRegistroPagina() }}</strong>
+          -
+          <strong>{{ ultimoRegistroPagina() }}</strong>
+          de
+          <strong>{{ registrosFiltrados().length }}</strong>
+          registros
+        </div>
+
+        @if (totalPaginas() > 1) {
+          <nav
+            class="pagination"
+            aria-label="Paginación del historial"
+          >
+            <button
+              type="button"
+              class="page-btn page-nav"
+              (click)="cambiarPagina(paginaActual - 1)"
+              [disabled]="paginaActual === 1"
+            >
+              Anterior
+            </button>
+
+            @for (
+              pagina of paginasVisibles();
+              track pagina
+            ) {
+              <button
+                type="button"
+                class="page-btn"
+                [class.active]="paginaActual === pagina"
+                (click)="cambiarPagina(pagina)"
+              >
+                {{ pagina }}
+              </button>
+            }
+
+            <button
+              type="button"
+              class="page-btn page-nav"
+              (click)="cambiarPagina(paginaActual + 1)"
+              [disabled]="paginaActual === totalPaginas()"
+            >
+              Siguiente
+            </button>
+          </nav>
+        }
+      </div>
+
+    }
+
+  </section>
+
+
+
+  <!-- ========================= -->
+  <!-- MODAL DETALLE             -->
+  <!-- ========================= -->
+
+  @if (detalleSeleccionado()) {
+    <div
+      class="modal-backdrop"
+      (click)="cerrarDetalle()"
+    >
+      <section
+        class="detail-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="detalleModalTitle"
+        (click)="$event.stopPropagation()"
+      >
+        <header class="detail-modal-header">
+          <div>
+            <span class="eyebrow">DETALLE DEL REGISTRO</span>
+            <h2 id="detalleModalTitle">
+              {{ detalleSeleccionado()!.plaza }}
+              · Turno {{ detalleSeleccionado()!.turno }}
+            </h2>
+            <p>
+              {{
+                detalleSeleccionado()!.fecha
+                  | date:'dd/MM/yyyy':'UTC'
+              }}
+              · {{ detalleSeleccionado()!.controlador }}
+            </p>
+          </div>
+
+          <button
+            class="modal-close"
+            type="button"
+            aria-label="Cerrar detalle"
+            (click)="cerrarDetalle()"
+          >
+            ×
+          </button>
+        </header>
+
+        <div class="detail-modal-body">
+
+          <section class="modal-summary-grid">
+            <article class="modal-stat">
+              <span>Presentes</span>
+              <strong>{{ detalleSeleccionado()!.presentes }}</strong>
+            </article>
+
+            <article class="modal-stat">
+              <span>Programados</span>
+              <strong>{{ detalleSeleccionado()!.programados }}</strong>
+            </article>
+
+            <article class="modal-stat">
+              <span>Ausentes</span>
+              <strong>{{ detalleSeleccionado()!.ausentes }}</strong>
+            </article>
+
+            <article class="modal-stat">
+              <span>Apoyo</span>
+              <strong>{{ detalleSeleccionado()!.apoyoSolicitado }}</strong>
+            </article>
+
+            <article class="modal-stat">
+              <span>Asistencia</span>
+              <strong>{{ detalleSeleccionado()!.porcentaje.toFixed(1) }}%</strong>
+            </article>
+          </section>
+
+          <div class="detail-modal-grid">
+
+            <section class="modal-section">
+              <h3>Ausencias</h3>
+
+              @if (detalleSeleccionado()!.ausencias.length) {
+                <div class="absence-items">
+                  @for (
+                    a of detalleSeleccionado()!.ausencias;
+                    track a.id
+                  ) {
+                    <div class="absence-item">
+                      <strong>
+                        {{ a.codigoTrabajador }}
+                        ·
+                        {{ a.nombreTrabajador }}
+                      </strong>
+
+                      <span>
+                        {{ a.motivo }}
+                      </span>
+
+                      @if (a.observacion) {
+                        <p>
+                          {{ a.observacion }}
+                        </p>
+                      }
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="muted">
+                  Sin ausencias registradas.
+                </p>
+              }
+            </section>
+
+            <section class="modal-section">
+              <h3>Evidencias</h3>
+
+              @if (detalleSeleccionado()!.evidencias.length) {
+                <div class="evidence-grid modal-evidence-grid">
+                  @for (
+                    e of detalleSeleccionado()!.evidencias;
+                    track e.id
+                  ) {
+                    <a
+                      [href]="e.urlArchivo"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <img
+                        [src]="e.urlArchivo"
+                        alt="Evidencia de asistencia"
+                      >
+                    </a>
+                  }
+                </div>
+              } @else {
+                <p class="muted">
+                  Sin evidencias adjuntas.
+                </p>
+              }
+            </section>
+
+            <section class="modal-section">
+              <h3>Personal de apoyo</h3>
+
+              <p>
+                <strong>
+                  {{ detalleSeleccionado()!.apoyoSolicitado }}
+                </strong>
+                persona(s) de apoyo.
+              </p>
+
+              @if (
+                detalleSeleccionado()!.apoyoSolicitado > 0 &&
+                detalleSeleccionado()!.detalleApoyo
+              ) {
+                <p class="support-detail">
+                  {{ detalleSeleccionado()!.detalleApoyo }}
+                </p>
+              }
+            </section>
+
+            <section class="modal-section">
+              <h3>Notas</h3>
+
+              <p>
+                {{
+                  detalleSeleccionado()!.notas ||
+                  'Sin observaciones.'
+                }}
+              </p>
+            </section>
+
+          </div>
+        </div>
+
+        <footer class="detail-modal-footer">
+          <a
+            class="action-btn action-edit"
+            [routerLink]="[
+              '/asistencia/historial/editar',
+              detalleSeleccionado()!.id
+            ]"
+            (click)="cerrarDetalle()"
+          >
+            Editar
+          </a>
+
+          <button
+            class="action-btn action-pdf"
+            type="button"
+            (click)="generarPdf(detalleSeleccionado()!)"
+            [disabled]="generandoPdfId() !== null"
+          >
+            @if (
+              generandoPdfId() === detalleSeleccionado()!.id
+            ) {
+              Generando...
+            } @else {
+              Generar PDF
+            }
+          </button>
+        </footer>
+      </section>
+    </div>
+  }
+
+</div>

@@ -1,0 +1,4 @@
+h1{margin-bottom:6px}.sub{color:#6b7280}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:20px}
+.card{background:white;border:1px solid #e5e7eb;border-radius:14px;padding:18px;position:relative}.card.low{border-width:2px}
+.card span{display:block;color:#6b7280;font-size:13px;margin-top:3px}.qty{font-size:24px;font-weight:800;margin:16px 0 6px}
+.badge{position:absolute;right:14px;top:14px;background:#fee2e2;color:#991b1b;padding:5px 8px;border-radius:999px;font-size:12px}

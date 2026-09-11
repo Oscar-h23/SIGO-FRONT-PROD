@@ -1,0 +1,5 @@
+.page-head h1{margin:0;font-size:30px}.page-head p{color:#6b7280}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:24px}
+.card{background:white;border:1px solid #e5e7eb;border-radius:16px;padding:22px;box-shadow:0 6px 18px rgba(0,0,0,.04)}
+.card:hover{transform:translateY(-2px);transition:.15s}
+.card h3{margin:0 0 8px}.card p{margin:0;color:#6b7280}

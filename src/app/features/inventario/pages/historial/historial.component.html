@@ -1,0 +1,36 @@
+<h1>Historial de inventarios</h1>
+@if (cargando) { <p>Cargando...</p> }
+
+<div class="table">
+  <div class="row header">
+    <span>ID</span><span>Plaza</span><span>Responsable</span><span>Rol</span><span>Estado</span><span></span>
+  </div>
+  @for (i of items; track i.id) {
+    <div class="row">
+      <span>#{{ i.id }}</span>
+      <span>{{ i.plaza }}</span>
+      <span>{{ i.responsable }}</span>
+      <span>{{ i.rol }}</span>
+      <span>{{ i.estado }}</span>
+      <button (click)="ver(i.id)">Ver</button>
+    </div>
+  }
+</div>
+
+@if (detalle) {
+  <div class="modal-backdrop" (click)="detalle=null">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <h2>Inventario #{{ detalle.id }}</h2>
+        <button (click)="detalle=null">Cerrar</button>
+      </div>
+      <p><strong>Plaza:</strong> {{ detalle.plaza }}</p>
+      <p><strong>Responsable:</strong> {{ detalle.responsable }}</p>
+      <p><strong>Estado:</strong> {{ detalle.estado }}</p>
+      <div class="detail-row" *ngFor="let p of detalle.productos">
+        <span>{{ p.nombre }}</span>
+        <strong>{{ p.cantidad }} {{ p.unidad }}</strong>
+      </div>
+    </div>
+  </div>
+}

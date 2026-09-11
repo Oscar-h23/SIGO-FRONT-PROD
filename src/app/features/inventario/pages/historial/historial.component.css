@@ -1,0 +1,6 @@
+h1{margin-top:0}.table{background:white;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden}
+.row{display:grid;grid-template-columns:.5fr .7fr 1.5fr .8fr .8fr .5fr;gap:10px;padding:13px;border-bottom:1px solid #eee;align-items:center}
+.header{background:#f9fafb;font-weight:700}.row button{padding:7px 10px;border:0;border-radius:8px;cursor:pointer}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:grid;place-items:center;padding:20px}
+.modal{background:white;width:min(650px,100%);max-height:80vh;overflow:auto;border-radius:16px;padding:24px}
+.modal-head{display:flex;justify-content:space-between;align-items:center}.detail-row{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #eee}

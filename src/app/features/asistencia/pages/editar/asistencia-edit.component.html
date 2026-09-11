@@ -1,0 +1,835 @@
+<div class="page">
+
+  <div class="page-header">
+
+    <div>
+      <h1>Editar asistencia</h1>
+
+      <p>
+        Modifica la información del registro,
+        las ausencias y las evidencias.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-secondary"
+      (click)="volver()"
+    >
+      Volver
+    </button>
+
+  </div>
+
+  @if (loading()) {
+
+    <div class="state-card">
+      Cargando información...
+    </div>
+
+  } @else {
+
+    @if (error()) {
+
+      <div class="alert alert-error">
+        {{ error() }}
+      </div>
+
+    }
+
+    @if (success()) {
+
+      <div class="alert alert-success">
+        {{ success() }}
+      </div>
+
+    }
+
+    <form
+      class="edit-form"
+      (ngSubmit)="guardar()"
+    >
+
+      <!-- ========================================= -->
+      <!-- INFORMACIÓN GENERAL                      -->
+      <!-- ========================================= -->
+
+      <section class="card">
+
+        <div class="section-header">
+
+          <div>
+            <h2>Información general</h2>
+
+            <p>
+              Actualiza los datos principales
+              de la asistencia.
+            </p>
+          </div>
+
+        </div>
+
+        <div class="form-grid">
+
+          <!-- PLAZA -->
+          <div class="field">
+
+            <label for="plaza">
+              Plaza
+            </label>
+
+            <select
+              id="plaza"
+              name="plaza"
+              [(ngModel)]="plazaId"
+              (ngModelChange)="cambiarPlaza()"
+              [disabled]="saving() || loadingCatalogos()"
+              required
+            >
+
+              <option
+                [ngValue]="null"
+                disabled
+              >
+                Seleccione una plaza
+              </option>
+
+              @for (plaza of plazas(); track plaza.id) {
+
+                <option
+                  [ngValue]="plaza.id"
+                >
+                  {{ plaza.codigo }}
+                  @if (plaza.descripcion) {
+                    - {{ plaza.descripcion }}
+                  }
+                </option>
+
+              }
+
+            </select>
+
+          </div>
+
+          <!-- TURNO -->
+          <div class="field">
+
+            <label for="turno">
+              Turno
+            </label>
+
+            <select
+              id="turno"
+              name="turno"
+              [(ngModel)]="turnoId"
+              (ngModelChange)="cambiarTurno()"
+              [disabled]="saving() || loadingCatalogos()"
+              required
+            >
+
+              <option
+                [ngValue]="null"
+                disabled
+              >
+                Seleccione un turno
+              </option>
+
+              @for (turno of turnos(); track turno.id) {
+
+                <option
+                  [ngValue]="turno.id"
+                >
+                  {{ turno.codigo }} - {{ turno.nombre }}
+                </option>
+
+              }
+
+            </select>
+
+          </div>
+
+          <!-- CONTROLADOR -->
+          <div class="field">
+
+            <label for="controlador">
+              Controlador
+            </label>
+
+            <select
+              id="controlador"
+              name="controlador"
+              [(ngModel)]="controladorId"
+              [disabled]="
+                saving()
+                || loadingPersonal()
+                || !plazaId
+              "
+              required
+            >
+
+              <option
+                [ngValue]="null"
+                disabled
+              >
+                @if (loadingPersonal()) {
+                  Cargando controladores...
+                } @else {
+                  Seleccione un controlador
+                }
+              </option>
+
+              @for (
+                controlador of controladores();
+                track controlador.id
+              ) {
+
+                <option
+                  [ngValue]="controlador.id"
+                >
+                  {{ controlador.codigo }}
+                  - {{ controlador.nombreCompleto }}
+                </option>
+
+              }
+
+            </select>
+
+          </div>
+
+          <!-- FECHA -->
+          <div class="field">
+
+            <label for="fecha">
+              Fecha
+            </label>
+
+            <input
+              id="fecha"
+              name="fecha"
+              type="date"
+              [(ngModel)]="fecha"
+              [disabled]="saving()"
+              required
+            />
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ========================================= -->
+      <!-- PERSONAL                                  -->
+      <!-- ========================================= -->
+
+      <section class="card">
+
+        <div class="section-header">
+
+          <div>
+            <h2>Personal</h2>
+
+            <p>
+              Ajusta la cantidad de personal
+              programado y presente.
+            </p>
+          </div>
+
+        </div>
+
+        <div class="stats-grid">
+
+          <!-- PROGRAMADOS -->
+          <div class="field">
+
+            <label for="programados">
+              Programados
+            </label>
+
+            <input
+              id="programados"
+              name="programados"
+              type="number"
+              min="0"
+              [(ngModel)]="programados"
+              (ngModelChange)="cambiarPresentes()"
+              [disabled]="saving()"
+              required
+            />
+
+          </div>
+
+          <!-- PRESENTES -->
+          <div class="field">
+
+            <label for="presentes">
+              Presentes
+            </label>
+
+            <input
+              id="presentes"
+              name="presentes"
+              type="number"
+              min="0"
+              [max]="programados"
+              [(ngModel)]="presentes"
+              (ngModelChange)="cambiarPresentes()"
+              [disabled]="saving()"
+              required
+            />
+
+          </div>
+
+          <!-- AUSENTES -->
+          <div class="summary-box">
+
+            <span class="summary-label">
+              Ausentes
+            </span>
+
+            <strong class="summary-value">
+              {{ cantidadAusentes }}
+            </strong>
+
+          </div>
+
+          <!-- APOYO SOLICITADO -->
+          <div class="field">
+
+            <label for="apoyoSolicitado">
+              Apoyo solicitado
+            </label>
+
+            <input
+              id="apoyoSolicitado"
+              name="apoyoSolicitado"
+              type="number"
+              min="0"
+              step="1"
+              [(ngModel)]="apoyoSolicitado"
+              [disabled]="saving()"
+              required
+            />
+
+            <small class="field-help">
+              Personal adicional coordinado para apoyar el turno.
+              No modifica el porcentaje de asistencia.
+            </small>
+
+          </div>
+
+          <!-- PORCENTAJE -->
+          <div class="summary-box">
+
+            <span class="summary-label">
+              Asistencia
+            </span>
+
+            <strong class="summary-value">
+
+              @if (programados > 0) {
+
+                {{
+                  (
+                    presentes
+                    / programados
+                    * 100
+                  )
+                  | number:'1.0-2'
+                }}%
+
+              } @else {
+
+                0%
+
+              }
+
+            </strong>
+
+          </div>
+
+        </div>
+
+        @if (apoyoSolicitado > 0) {
+
+          <div class="field support-detail">
+
+            <label for="detalleApoyo">
+              Detalle del apoyo
+            </label>
+
+            <textarea
+              id="detalleApoyo"
+              name="detalleApoyo"
+              rows="3"
+              maxlength="500"
+              [(ngModel)]="detalleApoyo"
+              [disabled]="saving()"
+              placeholder="Ej.: Se solicitó apoyo de un agente de otra plaza."
+            ></textarea>
+
+            <small class="field-help">
+              Describe brevemente el apoyo coordinado.
+            </small>
+
+          </div>
+
+        }
+
+      </section>
+
+      <!-- ========================================= -->
+      <!-- AUSENCIAS                                 -->
+      <!-- ========================================= -->
+
+      <section class="card">
+
+        <div class="section-header">
+
+          <div>
+            <h2>Ausencias</h2>
+
+            <p>
+              Registra el trabajador ausente,
+              el motivo y una observación.
+            </p>
+          </div>
+
+          <div class="section-count">
+            {{ cantidadAusentes }}
+            ausencia(s)
+          </div>
+
+        </div>
+
+        @if (cantidadAusentes === 0) {
+
+          <div class="empty-state">
+
+            No existen ausencias para este registro.
+
+          </div>
+
+        } @else {
+
+          <div class="absence-list">
+
+            @for (
+              ausencia of ausencias;
+              track $index;
+              let i = $index
+            ) {
+
+              <div class="absence-card">
+
+                <div class="absence-header">
+
+                  <strong>
+                    Ausencia {{ i + 1 }}
+                  </strong>
+
+                </div>
+
+                <div class="absence-grid">
+
+                  <!-- TRABAJADOR -->
+                  <div class="field">
+
+                    <label
+                      [for]="'trabajador-' + i"
+                    >
+                      Trabajador
+                    </label>
+
+                    <select
+                      [id]="'trabajador-' + i"
+                      [name]="'trabajador-' + i"
+                      [(ngModel)]="
+                        ausencias[i].trabajadorId
+                      "
+                      [disabled]="
+                        saving()
+                        || loadingPersonal()
+                        || !plazaId
+                      "
+                      required
+                    >
+
+                      <option
+                        [ngValue]="0"
+                        disabled
+                      >
+                        Seleccione un trabajador
+                      </option>
+
+                      @for (
+                        trabajador
+                        of agentesDisponibles(i);
+                        track trabajador.id
+                      ) {
+
+                        <option
+                          [ngValue]="trabajador.id"
+                        >
+                          {{ trabajador.codigo }}
+                          -
+                          {{ trabajador.nombreCompleto }}
+                        </option>
+
+                      }
+
+                    </select>
+
+                  </div>
+
+                  <!-- MOTIVO -->
+                  <div class="field">
+
+                    <label
+                      [for]="'motivo-' + i"
+                    >
+                      Motivo
+                    </label>
+
+                    <select
+                      [id]="'motivo-' + i"
+                      [name]="'motivo-' + i"
+                      [(ngModel)]="
+                        ausencias[i].motivoId
+                      "
+                      [disabled]="saving()"
+                      required
+                    >
+
+                      <option
+                        [ngValue]="0"
+                        disabled
+                      >
+                        Seleccione un motivo
+                      </option>
+
+                      @for (
+                        motivo of motivos();
+                        track motivo.id
+                      ) {
+
+                        <option
+                          [ngValue]="motivo.id"
+                        >
+                          {{ motivo.nombre }}
+                        </option>
+
+                      }
+
+                    </select>
+
+                  </div>
+
+                  <!-- OBSERVACIÓN -->
+                  <div class="field field-full">
+
+                    <label
+                      [for]="'observacion-' + i"
+                    >
+                      Observación
+                    </label>
+
+                    <textarea
+                      [id]="'observacion-' + i"
+                      [name]="'observacion-' + i"
+                      rows="3"
+                      maxlength="255"
+                      [(ngModel)]="
+                        ausencias[i].observacion
+                      "
+                      [disabled]="saving()"
+                      placeholder="Ingrese una observación opcional"
+                    ></textarea>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            }
+
+          </div>
+
+        }
+
+      </section>
+
+      <!-- ========================================= -->
+      <!-- NOTAS                                     -->
+      <!-- ========================================= -->
+
+      <section class="card">
+
+        <div class="section-header">
+
+          <div>
+            <h2>Notas</h2>
+
+            <p>
+              Agrega información adicional
+              relacionada con la asistencia.
+            </p>
+          </div>
+
+        </div>
+
+        <div class="field">
+
+          <label for="notas">
+            Observaciones generales
+          </label>
+
+          <textarea
+            id="notas"
+            name="notas"
+            rows="4"
+            [(ngModel)]="notas"
+            [disabled]="saving()"
+            placeholder="Ingrese una observación general"
+          ></textarea>
+
+        </div>
+
+      </section>
+
+      <!-- ========================================= -->
+      <!-- EVIDENCIAS EXISTENTES                     -->
+      <!-- ========================================= -->
+
+      <section class="card">
+
+        <div class="section-header">
+
+          <div>
+
+            <h2>
+              Evidencias fotográficas
+            </h2>
+
+            <p>
+              Puedes conservar, eliminar o
+              agregar nuevas fotografías.
+            </p>
+
+          </div>
+
+          <div class="section-count">
+
+            {{ evidencias().length }}
+            foto(s)
+
+          </div>
+
+        </div>
+
+        @if (evidencias().length === 0) {
+
+          <div class="empty-state">
+
+            Este registro no tiene fotografías.
+
+          </div>
+
+        } @else {
+
+          <div class="evidence-grid">
+
+            @for (
+              evidencia of evidencias();
+              track evidencia.id
+            ) {
+
+              <div class="evidence-card">
+
+                <a
+                  [href]="evidencia.urlArchivo"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="evidence-image-link"
+                >
+
+                  <img
+                    [src]="evidencia.urlArchivo"
+                    alt="Evidencia de asistencia"
+                    class="evidence-image"
+                  />
+
+                </a>
+
+                <div class="evidence-actions">
+
+                  <a
+                    [href]="evidencia.urlArchivo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn btn-light btn-small"
+                  >
+                    Ver
+                  </a>
+
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-small"
+                    (click)="eliminarEvidencia(evidencia)"
+                    [disabled]="saving()"
+                  >
+                    Eliminar
+                  </button>
+
+                </div>
+
+              </div>
+
+            }
+
+          </div>
+
+        }
+
+      </section>
+
+      <!-- ========================================= -->
+      <!-- NUEVAS EVIDENCIAS                         -->
+      <!-- ========================================= -->
+
+      <section class="card">
+
+        <div class="section-header">
+
+          <div>
+
+            <h2>
+              Agregar fotografías
+            </h2>
+
+            <p>
+              Las fotografías nuevas se subirán
+              al guardar los cambios.
+            </p>
+
+          </div>
+
+        </div>
+
+        <div class="upload-area">
+
+          <label
+            class="upload-button"
+            for="nuevas-evidencias"
+          >
+            Seleccionar fotografías
+          </label>
+
+          <input
+            id="nuevas-evidencias"
+            type="file"
+            accept="image/*"
+            multiple
+            (change)="seleccionarArchivos($event)"
+            [disabled]="saving()"
+            hidden
+          />
+
+        </div>
+
+        @if (archivosNuevos.length > 0) {
+
+          <div class="new-files">
+
+            @for (
+              archivo of archivosNuevos;
+              track $index;
+              let i = $index
+            ) {
+
+              <div class="new-file">
+
+                <div class="new-file-info">
+
+                  <span class="file-name">
+                    {{ archivo.name }}
+                  </span>
+
+                  <span class="file-size">
+                    {{
+                      archivo.size / 1024 / 1024
+                      | number:'1.1-2'
+                    }}
+                    MB
+                  </span>
+
+                </div>
+
+                <button
+                  type="button"
+                  class="btn btn-danger btn-small"
+                  (click)="quitarArchivoNuevo(i)"
+                  [disabled]="saving()"
+                >
+                  Quitar
+                </button>
+
+              </div>
+
+            }
+
+          </div>
+
+        }
+
+      </section>
+
+      <!-- ========================================= -->
+      <!-- ACCIONES                                  -->
+      <!-- ========================================= -->
+
+      <div class="form-actions">
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="volver()"
+          [disabled]="saving()"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="
+            saving()
+            || uploading()
+            || loadingPersonal()
+          "
+        >
+
+          @if (uploading()) {
+
+            Subiendo fotografías...
+
+          } @else if (saving()) {
+
+            Guardando...
+
+          } @else {
+
+            Guardar cambios
+
+          }
+
+        </button>
+
+      </div>
+
+    </form>
+
+  }
+
+</div>

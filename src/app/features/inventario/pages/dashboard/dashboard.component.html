@@ -1,0 +1,42 @@
+<div class="page-head">
+  <div>
+    <h1>Inventario</h1>
+    <p>
+      Bienvenido, <strong>{{ auth.usuario()?.nombre }}</strong>.
+      Rol: <strong>{{ auth.usuario()?.rol }}</strong>
+      @if (auth.usuario()?.plaza) {
+        · Plaza <strong>{{ auth.usuario()?.plaza }}</strong>
+      }
+    </p>
+  </div>
+</div>
+
+<div class="cards">
+  <a class="card" routerLink="/nuevo-inventario">
+    <h3>Nuevo inventario</h3>
+    <p>Registrar el conteo físico de los productos de tu plaza.</p>
+  </a>
+
+  <a class="card" routerLink="/historial">
+    <h3>Historial</h3>
+    <p>Consultar inventarios anteriores y su detalle.</p>
+  </a>
+
+  @if (auth.tieneRol('CONTROLADOR','SUPERVISOR')) {
+    <a class="card" routerLink="/stock">
+      <h3>Stock actual</h3>
+      <p>Ver el último stock registrado por producto.</p>
+    </a>
+
+    <a class="card" routerLink="/productos">
+      <h3>Administrar productos</h3>
+      <p>
+        @if (auth.tieneRol('CONTROLADOR')) {
+          Crear y administrar productos de tu plaza.
+        } @else {
+          Crear y administrar productos de todas las plazas.
+        }
+      </p>
+    </a>
+  }
+</div>

@@ -1,0 +1,1 @@
+export interface Via{id:number;numero:string|number;codigo?:string;activo?:boolean} export interface ElementoRelevo{id:number;codigo:string;nombre:string;ubicacion?:string;activo?:boolean} export interface RelevoResponse{id:number;plazaId:number;plaza:string;turnoId?:number;turno:string;controlador?:string;fecha:string;observacion?:string|null;checklist?:any[];vias?:any[]}

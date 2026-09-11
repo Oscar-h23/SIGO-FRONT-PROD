@@ -1,0 +1,45 @@
+<div class="head">
+  <div>
+    <h1>Nuevo inventario</h1>
+    <p>Registra la cantidad física encontrada.</p>
+  </div>
+
+  @if (!inventarioId) {
+    <button class="primary" (click)="iniciar()" [disabled]="cargando">
+      {{ cargando ? 'Iniciando...' : 'Iniciar inventario' }}
+    </button>
+  }
+</div>
+
+@if (error) { <div class="alert error">{{ error }}</div> }
+@if (mensaje) { <div class="alert success">{{ mensaje }}</div> }
+
+@if (inventarioId) {
+  <div class="info">Inventario #{{ inventarioId }}</div>
+
+  @for (ambito of ambitos(); track ambito) {
+    <section>
+      <h2>{{ ambito }}</h2>
+      <div class="table">
+        <div class="row header">
+          <span>Producto</span><span>Unidad</span><span>Cantidad</span>
+        </div>
+        @for (p of privadosAmbito(ambito); track p.id) {
+          <div class="row">
+            <span>
+              <strong>{{ p.nombre }}</strong>
+              <small>{{ p.codigo }}</small>
+            </span>
+            <span>{{ p.unidadMedida }}</span>
+            <input type="number" min="0" [(ngModel)]="cantidades[p.id]">
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <div class="actions">
+    <button (click)="guardar()">Guardar avance</button>
+    <button class="primary" (click)="finalizar()">Finalizar inventario</button>
+  </div>
+}

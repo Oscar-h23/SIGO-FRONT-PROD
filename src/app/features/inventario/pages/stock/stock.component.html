@@ -1,0 +1,16 @@
+<h1>Stock actual</h1>
+<p class="sub">Último conteo finalizado por producto y plaza.</p>
+
+<div class="cards">
+  @for (s of items; track s.plazaId + '-' + s.productoId) {
+    <div class="card" [class.low]="s.bajoMinimo">
+      <div>
+        <strong>{{ s.producto }}</strong>
+        <span>{{ s.plaza }}</span>
+      </div>
+      <div class="qty">{{ s.cantidadActual }} {{ s.unidadMedida }}</div>
+      <small>Mínimo: {{ s.stockMinimo }}</small>
+      @if (s.bajoMinimo) { <div class="badge">Bajo mínimo</div> }
+    </div>
+  }
+</div>

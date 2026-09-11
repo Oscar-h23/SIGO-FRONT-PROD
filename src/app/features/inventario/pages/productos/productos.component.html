@@ -1,0 +1,173 @@
+<div class="page-header">
+  <div>
+    <h1>Administrar productos</h1>
+
+    @if (esControlador()) {
+      <p>
+        Puedes crear y administrar productos para tu plaza
+        <strong>{{ auth.usuario()?.plaza }}</strong>.
+      </p>
+    } @else {
+      <p>Puedes administrar productos y asignarlos a cualquier plaza.</p>
+    }
+  </div>
+</div>
+
+@if (error) {
+  <div class="alert error">{{ error }}</div>
+}
+
+@if (mensaje) {
+  <div class="alert success">{{ mensaje }}</div>
+}
+
+<div class="grid">
+  <section>
+    <h2>Productos</h2>
+
+    <div class="table">
+      @for (p of productosVisibles(); track p.id) {
+        <div class="product-row">
+          <div>
+            <strong>{{ p.nombre }}</strong>
+            <span>{{ p.codigo }} · {{ p.unidadMedida }}</span>
+          </div>
+
+          <div>
+            <small>Roles</small>
+            <span>{{ p.roles.join(', ') }}</span>
+          </div>
+
+          <div>
+            <small>Plazas</small>
+            <span>
+              @for (plaza of p.plazas; track plaza.plazaId) {
+                {{ plaza.plaza }}
+              }
+            </span>
+          </div>
+
+          <span class="estado">
+            {{ p.activo ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+      } @empty {
+        <div class="empty">
+          No hay productos disponibles.
+        </div>
+      }
+    </div>
+  </section>
+
+  <aside class="form-card">
+    <h2>Nuevo producto</h2>
+
+    <label>Código</label>
+    <input
+      placeholder="Ej. CONO001"
+      [(ngModel)]="form.codigo">
+
+    <label>Nombre</label>
+    <input
+      placeholder="Nombre del producto"
+      [(ngModel)]="form.nombre">
+
+    <label>Descripción</label>
+    <textarea
+      placeholder="Descripción opcional"
+      [(ngModel)]="form.descripcion"></textarea>
+
+    <label>Categoría</label>
+    <select [(ngModel)]="form.categoriaId">
+      <option [ngValue]="null">
+        Selecciona una categoría
+      </option>
+
+      @for (c of categorias; track c.id) {
+        <option [ngValue]="c.id">
+          {{ c.nombre }}
+        </option>
+      }
+    </select>
+
+    <label>Ámbito</label>
+    <select [(ngModel)]="form.ambitoId">
+      <option [ngValue]="null">
+        Selecciona un ámbito
+      </option>
+
+      @for (a of ambitos; track a.id) {
+        <option [ngValue]="a.id">
+          {{ a.nombre }}
+        </option>
+      }
+    </select>
+
+    <label>Unidad de medida</label>
+    <input
+      placeholder="Ej. Unidad"
+      [(ngModel)]="form.unidadMedida">
+
+    <h3>Quién puede verlo</h3>
+
+    @for (r of roles; track r.id) {
+      @if (!(esControlador() && r.codigo === 'SUPERVISOR')) {
+        <label class="check">
+          <input
+            type="checkbox"
+            [checked]="form.roles.includes(r.codigo)"
+            (change)="toggleRol(r.codigo || '')">
+          {{ r.nombre }}
+        </label>
+      }
+    }
+
+    <h3>Plaza y stock mínimo</h3>
+
+    @if (esControlador()) {
+      <div class="controller-plaza">
+        <div>
+          <strong>{{ auth.usuario()?.plaza }}</strong>
+          <span>Tu plaza asignada</span>
+        </div>
+
+        @if (auth.usuario()?.plazaId; as plazaId) {
+          @if (plazaSeleccionada(plazaId); as seleccion) {
+            <input
+              type="number"
+              min="0"
+              [(ngModel)]="seleccion.stockMinimo"
+              placeholder="Stock mínimo">
+          }
+        }
+      </div>
+    } @else {
+      @for (p of plazas; track p.id) {
+        <div class="plaza-line">
+          <label class="check">
+            <input
+              type="checkbox"
+              [checked]="!!plazaSeleccionada(p.id)"
+              (change)="togglePlaza(p.id)">
+            {{ p.codigo }}
+          </label>
+
+          @if (plazaSeleccionada(p.id); as seleccion) {
+            <input
+              type="number"
+              min="0"
+              [(ngModel)]="seleccion.stockMinimo"
+              placeholder="Stock mínimo">
+          }
+        </div>
+      }
+    }
+
+    <button
+      class="primary"
+      (click)="guardar()"
+      [disabled]="guardando">
+      {{ guardando ? 'Guardando...' : 'Crear producto' }}
+    </button>
+  </aside>
+</div>
