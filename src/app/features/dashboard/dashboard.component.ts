@@ -3,6 +3,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
+import { AuthService } from '../../core/auth/auth.service';
 import { AsistenciaResponse, Plaza, Turno } from '../asistencia/models/asistencia.models';
 import { AsistenciaApiService } from '../asistencia/services/asistencia-api.service';
 
@@ -22,6 +23,11 @@ interface TurnoResumen {
   porcentaje: number;
 }
 
+interface TendenciaMensual {
+  delta: number;
+  subiendo: boolean;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -31,10 +37,14 @@ interface TurnoResumen {
 })
 export class DashboardComponent implements OnInit {
   private readonly api = inject(AsistenciaApiService);
+  readonly auth = inject(AuthService);
 
   readonly loading = signal(true);
   readonly loadingMensual = signal(true);
   readonly error = signal('');
+  readonly errorMensual = signal('');
+  readonly ultimaActualizacion = signal<Date | null>(null);
+
   readonly plazas = signal<Plaza[]>([]);
   readonly turnos = signal<Turno[]>([]);
   readonly registrosMesActual = signal<AsistenciaResponse[]>([]);
@@ -68,7 +78,13 @@ export class DashboardComponent implements OnInit {
   readonly yTicks = [100, 75, 50, 25, 0];
   readonly meta = 95;
 
+  readonly esSupervisor = computed(() => this.auth.tieneRol('SUPERVISOR'));
+  readonly plazaBloqueada = computed(() => !this.esSupervisor() && !!this.auth.usuario()?.plazaId);
   readonly nombreMes = computed(() => this.meses.find(item => item.id === this.mes())?.nombre ?? 'Mes');
+  readonly plazaSeleccionada = computed(() => {
+    if (!this.plazaId()) return 'Todas las plazas';
+    return this.plazas().find(item => item.id === this.plazaId())?.codigo ?? this.auth.usuario()?.plaza ?? 'Plaza';
+  });
 
   readonly registrosMes = computed(() => {
     const turnoId = this.turnoId();
@@ -81,9 +97,12 @@ export class DashboardComponent implements OnInit {
   });
 
   readonly totalRegistros = computed(() => this.registrosMes().length);
+  readonly totalProgramados = computed(() => this.registrosMes().reduce((acc, item) => acc + Number(item.programados || 0), 0));
+  readonly totalPresentes = computed(() => this.registrosMes().reduce((acc, item) => acc + Number(item.presentes || 0), 0));
   readonly totalAusencias = computed(() => this.registrosMes().reduce((acc, item) => acc + Number(item.ausentes || 0), 0));
   readonly registros100 = computed(() => this.registrosMes().filter(item => Number(item.porcentaje) >= 99.995).length);
   readonly asistenciaPromedio = computed(() => this.weightedPercentage(this.registrosMes()));
+  readonly sinDatos = computed(() => !this.loading() && !this.error() && this.registrosMes().length === 0);
 
   private readonly acumuladoPorMes = computed(() => {
     const acumulado = new Map<number, { programados: number; presentes: number }>();
@@ -108,6 +127,19 @@ export class DashboardComponent implements OnInit {
           : null
       };
     });
+  });
+
+  readonly tendenciaMensual = computed<TendenciaMensual | null>(() => {
+    const indiceActual = this.mes() - 1;
+    const indiceAnterior = indiceActual - 1;
+    if (indiceAnterior < 0) return null;
+
+    const actual = this.mensual()[indiceActual]?.value;
+    const anterior = this.mensual()[indiceAnterior]?.value;
+    if (actual === null || actual === undefined || anterior === null || anterior === undefined) return null;
+
+    const delta = Math.round((actual - anterior) * 10) / 10;
+    return { delta, subiendo: delta >= 0 };
   });
 
   private readonly acumuladoPorDia = computed(() => {
@@ -174,6 +206,10 @@ export class DashboardComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    const usuario = this.auth.usuario();
+    if (usuario?.rol !== 'SUPERVISOR' && usuario?.plazaId) {
+      this.plazaId.set(usuario.plazaId);
+    }
     this.cargarInicial();
   }
 
@@ -189,6 +225,7 @@ export class DashboardComponent implements OnInit {
   }
 
   onPlazaChange(event: Event): void {
+    if (this.plazaBloqueada()) return;
     const value = (event.target as HTMLSelectElement).value;
     this.plazaId.set(value ? Number(value) : null);
     this.cargarMesActual();
@@ -198,6 +235,14 @@ export class DashboardComponent implements OnInit {
   onTurnoChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.turnoId.set(value ? Number(value) : null);
+  }
+
+  actualizar(): void {
+    this.cacheMes.clear();
+    this.cacheAnio.clear();
+    this.error.set('');
+    this.errorMensual.set('');
+    this.cargarInicial();
   }
 
   cargarInicial(): void {
@@ -211,10 +256,12 @@ export class DashboardComponent implements OnInit {
       registros: this.api.listarAsistencias(inicio, fin, this.plazaId())
     }).subscribe({
       next: ({ plazas, turnos, registros }) => {
-        this.plazas.set(plazas.filter(item => item.activo));
+        const activas = plazas.filter(item => item.activo);
+        this.plazas.set(this.plazaBloqueada() ? activas.filter(item => item.id === this.plazaId()) : activas);
         this.turnos.set(turnos);
         this.registrosMesActual.set(registros);
         this.cacheMes.set(this.claveMes(), registros);
+        this.ultimaActualizacion.set(new Date());
         this.loading.set(false);
       },
       error: err => this.handleError(err)
@@ -240,6 +287,7 @@ export class DashboardComponent implements OnInit {
       next: registros => {
         this.registrosMesActual.set(registros);
         this.cacheMes.set(clave, registros);
+        this.ultimaActualizacion.set(new Date());
         this.loading.set(false);
       },
       error: err => this.handleError(err)
@@ -256,6 +304,7 @@ export class DashboardComponent implements OnInit {
     }
 
     this.loadingMensual.set(true);
+    this.errorMensual.set('');
     const { inicio, fin } = this.yearRange();
 
     this.api.listarAsistencias(inicio, fin, this.plazaId()).subscribe({
@@ -264,7 +313,11 @@ export class DashboardComponent implements OnInit {
         this.cacheAnio.set(clave, registros);
         this.loadingMensual.set(false);
       },
-      error: () => this.loadingMensual.set(false)
+      error: err => {
+        this.loadingMensual.set(false);
+        const e = err as { error?: { message?: string }; message?: string };
+        this.errorMensual.set(e?.error?.message ?? e?.message ?? 'No se pudo cargar la tendencia anual.');
+      }
     });
   }
 
@@ -283,11 +336,20 @@ export class DashboardComponent implements OnInit {
   }
 
   linePath(points: LinePoint[]): string {
-    const validos = points
-      .map((point, index) => point.value === null ? null : `${this.chartX(index, points.length)},${this.chartY(point.value)}`)
-      .filter((point): point is string => point !== null);
-    if (!validos.length) return '';
-    return `M ${validos.join(' L ')}`;
+    const segmentos: string[] = [];
+    let segmento: string[] = [];
+
+    points.forEach((point, index) => {
+      if (point.value === null) {
+        if (segmento.length) segmentos.push(this.segmentoPath(segmento));
+        segmento = [];
+        return;
+      }
+      segmento.push(`${this.chartX(index, points.length)},${this.chartY(point.value)}`);
+    });
+
+    if (segmento.length) segmentos.push(this.segmentoPath(segmento));
+    return segmentos.join(' ');
   }
 
   bajoMeta(value: number | null): boolean {
@@ -296,6 +358,10 @@ export class DashboardComponent implements OnInit {
 
   motivoWidth(total: number): number {
     return Math.max(4, (total / this.maxMotivos()) * 100);
+  }
+
+  private segmentoPath(puntos: string[]): string {
+    return puntos.length ? `M ${puntos.join(' L ')}` : '';
   }
 
   private weightedPercentage(registros: AsistenciaResponse[]): number {
