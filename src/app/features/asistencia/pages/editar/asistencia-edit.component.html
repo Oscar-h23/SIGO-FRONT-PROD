@@ -118,7 +118,10 @@
       </section>
 
       <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <div class="flex items-center justify-between gap-3"><div><h2 class="text-lg font-semibold text-slate-950">Evidencias actuales</h2><p class="mt-1 text-sm text-slate-500">Conserva o elimina fotografías existentes.</p></div><span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{{ evidencias().length }} foto(s)</span></div>
+        <div class="flex items-center justify-between gap-3">
+          <div><h2 class="text-lg font-semibold text-slate-950">Evidencias actuales</h2><p class="mt-1 text-sm text-slate-500">Estas son las fotografías guardadas actualmente.</p></div>
+          <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{{ evidencias().length }} foto(s)</span>
+        </div>
 
         @if (!evidencias().length) {
           <div class="mt-5 rounded-2xl bg-slate-50 p-5 text-sm text-slate-500">Este registro no tiene fotografías.</div>
@@ -127,7 +130,10 @@
             @for (evidencia of evidencias(); track evidencia.id) {
               <article class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
                 <a [href]="evidencia.urlArchivo" target="_blank" rel="noopener noreferrer"><img class="aspect-[10/7] w-full object-cover" [src]="evidencia.urlArchivo" alt="Evidencia de asistencia"></a>
-                <div class="flex items-center justify-between gap-3 p-4"><div><p class="text-sm font-semibold text-slate-900">{{ nombreTipoEvidencia(evidencia.tipo) }}</p><p class="text-xs text-slate-500">Evidencia guardada</p></div><button type="button" class="rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600" (click)="eliminarEvidencia(evidencia)" [disabled]="saving()">Eliminar</button></div>
+                <div class="flex items-center justify-between gap-3 p-4">
+                  <div><p class="text-sm font-semibold text-slate-900">{{ nombreTipoEvidencia(evidencia.tipo) }}</p><p class="text-xs text-slate-500">Evidencia guardada</p></div>
+                  <button type="button" class="rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50" (click)="solicitarEliminarEvidencia(evidencia)" [disabled]="saving()">Eliminar</button>
+                </div>
               </article>
             }
           </div>
@@ -136,7 +142,12 @@
 
       <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <h2 class="text-lg font-semibold text-slate-950">Cambiar o agregar fotografías</h2>
-        <p class="mt-1 text-sm text-slate-500">Cada nueva fotografía pasa por el editor antes de subirse.</p>
+        <p class="mt-1 text-sm text-slate-500">Selecciona el tipo de evidencia. Si ya existe una fotografía de ese tipo, la nueva la reemplazará al guardar.</p>
+
+        <div class="mt-5 rounded-2xl border border-blue-200 bg-blue-50 p-4">
+          <p class="text-sm font-semibold text-blue-900">También puedes pegar una imagen</p>
+          <p class="mt-1 text-sm text-blue-800">Haz clic en la tarjeta de destino y luego presiona <kbd class="rounded border border-blue-300 bg-white px-1.5 py-0.5 text-xs font-semibold">Ctrl + V</kbd> o <kbd class="rounded border border-blue-300 bg-white px-1.5 py-0.5 text-xs font-semibold">Cmd + V</kbd>. La tarjeta activa quedará marcada en azul.</p>
+        </div>
 
         <div class="mt-5 grid gap-4 lg:grid-cols-3">
           @for (item of [
@@ -144,14 +155,43 @@
             { tipo: 'INICIO_TURNO', titulo: 'Inicio de turno' },
             { tipo: 'TAPONES_AUDITIVOS', titulo: 'Tapones auditivos' }
           ]; track item.tipo) {
-            <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <h3 class="text-sm font-semibold text-slate-950">{{ item.titulo }}</h3>
+            <article
+              class="cursor-pointer rounded-2xl border-2 p-4 transition"
+              [class.border-blue-500]="evidenciaPegadoActiva() === item.tipo"
+              [class.bg-blue-50]="evidenciaPegadoActiva() === item.tipo"
+              [class.border-slate-200]="evidenciaPegadoActiva() !== item.tipo"
+              [class.bg-slate-50]="evidenciaPegadoActiva() !== item.tipo"
+              (click)="activarPegado($any(item.tipo))"
+            >
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <h3 class="text-sm font-semibold text-slate-950">{{ item.titulo }}</h3>
+                  @if (evidenciaExistentePorTipo($any(item.tipo))) {
+                    <p class="mt-1 text-xs font-medium text-amber-700">Ya existe una foto. La nueva la reemplazará.</p>
+                  } @else {
+                    <p class="mt-1 text-xs text-slate-500">No hay una foto guardada de este tipo.</p>
+                  }
+                </div>
+                @if (evidenciaPegadoActiva() === item.tipo) {
+                  <span class="rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-semibold text-white">Destino para pegar</span>
+                }
+              </div>
+
               @if (archivoNuevoPorTipo($any(item.tipo)); as pendiente) {
-                <p class="mt-1 truncate text-xs text-slate-500">{{ pendiente.archivo.name }} · {{ pendiente.archivo.size / 1024 / 1024 | number:'1.1-2' }} MB</p>
-                <div class="mt-4 flex gap-2"><label class="cursor-pointer rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white">Cambiar<input class="hidden" type="file" accept="image/jpeg,image/png,image/webp" (change)="seleccionarArchivos($any(item.tipo), $event)"></label><button type="button" class="rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600" (click)="quitarArchivoNuevoPorTipo($any(item.tipo))">Quitar</button></div>
+                <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                  <p class="text-xs font-semibold text-emerald-800">Nueva foto lista para guardar</p>
+                  <p class="mt-1 truncate text-xs text-emerald-700">{{ pendiente.archivo.name }} · {{ pendiente.archivo.size / 1024 / 1024 | number:'1.1-2' }} MB</p>
+                </div>
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <label class="cursor-pointer rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700" (click)="$event.stopPropagation()">Cambiar archivo<input class="hidden" type="file" accept="image/jpeg,image/png,image/webp" (change)="seleccionarArchivos($any(item.tipo), $event)"></label>
+                  <button type="button" class="rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600" (click)="$event.stopPropagation(); quitarArchivoNuevoPorTipo($any(item.tipo))">Quitar nueva</button>
+                </div>
               } @else {
-                <p class="mt-1 text-xs text-slate-500">Sin nueva fotografía seleccionada</p>
-                <label class="mt-4 inline-flex cursor-pointer rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white">Seleccionar<input class="hidden" type="file" accept="image/jpeg,image/png,image/webp" (change)="seleccionarArchivos($any(item.tipo), $event)"></label>
+                <div class="mt-4 rounded-xl border-2 border-dashed border-slate-300 bg-white p-4 text-center">
+                  <p class="text-xs font-medium text-slate-600">Haz clic en esta tarjeta y pega con Ctrl/Cmd+V</p>
+                  <div class="my-3 flex items-center gap-3 text-xs text-slate-400"><span class="h-px flex-1 bg-slate-200"></span>o<span class="h-px flex-1 bg-slate-200"></span></div>
+                  <label class="inline-flex cursor-pointer rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700" (click)="$event.stopPropagation()">Seleccionar archivo<input class="hidden" type="file" accept="image/jpeg,image/png,image/webp" (change)="seleccionarArchivos($any(item.tipo), $event)"></label>
+                </div>
               }
             </article>
           }
@@ -160,7 +200,7 @@
 
       <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <button type="button" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700" (click)="volver()" [disabled]="saving()">Cancelar</button>
-        <button type="submit" class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50" [disabled]="saving() || uploading() || loadingPersonal()">@if (uploading()) { Subiendo fotografías... } @else if (saving()) { Guardando... } @else { Guardar cambios }</button>
+        <button type="submit" class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50" [disabled]="saving() || uploading() || loadingPersonal()">@if (uploading()) { Reemplazando fotografías... } @else if (saving()) { Guardando... } @else { Guardar cambios }</button>
       </div>
     </form>
   }
@@ -172,4 +212,48 @@
     (cancelar)="onCropperCancel()"
     (confirmar)="onCropperConfirm($event)">
   </app-image-cropper-modal>
+
+  @if (confirmGuardarVisible()) {
+    <div class="fixed inset-0 z-[10000] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm" (click)="cancelarConfirmacionGuardar()">
+      <section class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+        <div class="grid h-12 w-12 place-items-center rounded-2xl bg-amber-100 text-xl font-bold text-amber-700">!</div>
+        <h2 class="mt-4 text-xl font-semibold text-slate-950">¿Guardar estos cambios?</h2>
+        <p class="mt-2 text-sm leading-6 text-slate-500">Se actualizará la asistencia. Las nuevas fotografías reemplazarán cualquier evidencia existente del mismo tipo.</p>
+        @if (archivosNuevos.length > 0) {
+          <div class="mt-4 rounded-2xl bg-amber-50 p-4 text-sm text-amber-800">
+            <strong>{{ archivosNuevos.length }}</strong> evidencia(s) será(n) reemplazada(s) o agregada(s).
+          </div>
+        }
+        <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button type="button" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50" (click)="cancelarConfirmacionGuardar()">Volver y revisar</button>
+          <button type="button" class="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700" (click)="confirmarGuardar()">Sí, guardar cambios</button>
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (evidenciaEliminarPendiente(); as evidencia) {
+    <div class="fixed inset-0 z-[10000] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm" (click)="cancelarEliminarEvidencia()">
+      <section class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+        <div class="grid h-12 w-12 place-items-center rounded-2xl bg-red-100 text-xl font-bold text-red-700">!</div>
+        <h2 class="mt-4 text-xl font-semibold text-slate-950">¿Eliminar esta evidencia?</h2>
+        <p class="mt-2 text-sm leading-6 text-slate-500">Se eliminará la fotografía de <strong>{{ nombreTipoEvidencia(evidencia.tipo) }}</strong>. Esta acción no se puede deshacer.</p>
+        <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button type="button" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700" (click)="cancelarEliminarEvidencia()">Cancelar</button>
+          <button type="button" class="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700" (click)="confirmarEliminarEvidencia()">Sí, eliminar</button>
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (successModalVisible()) {
+    <div class="fixed inset-0 z-[10000] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm">
+      <section class="w-full max-w-md rounded-3xl bg-white p-6 text-center shadow-2xl" role="dialog" aria-modal="true">
+        <div class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-2xl font-bold text-emerald-700">✓</div>
+        <h2 class="mt-4 text-xl font-semibold text-slate-950">Cambios guardados</h2>
+        <p class="mt-2 text-sm leading-6 text-slate-500">La asistencia se actualizó correctamente. Las fotografías nuevas ya reemplazaron las evidencias anteriores del mismo tipo.</p>
+        <button type="button" class="mt-6 w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700" (click)="cerrarSuccessModal()">Entendido</button>
+      </section>
+    </div>
+  }
 </div>
