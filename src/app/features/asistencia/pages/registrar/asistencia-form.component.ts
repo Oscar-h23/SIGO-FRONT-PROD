@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 
@@ -45,6 +45,11 @@ export class AsistenciaFormComponent implements OnInit {
   readonly cropperVisible = signal(false);
   readonly cropperFile = signal<File | null>(null);
   readonly cropperTipo = signal<EvidenciaTipo | null>(null);
+  readonly evidenciaPegadoActiva = signal<EvidenciaTipo | null>(null);
+
+  readonly confirmRegistroVisible = signal(false);
+  readonly successModalVisible = signal(false);
+  readonly ultimoRegistroId = signal<number | null>(null);
 
   readonly ausentesEsperados = signal(0);
 
@@ -67,16 +72,26 @@ export class AsistenciaFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarCatalogos();
-
     this.form.controls.plazaId.valueChanges.subscribe(plazaId => this.onPlazaChange(plazaId));
     this.form.controls.turnoId.valueChanges.subscribe(() => this.syncTurno());
     this.form.controls.programados.valueChanges.subscribe(() => this.syncProgramados());
     this.form.controls.presentes.valueChanges.subscribe(() => this.syncAusencias());
   }
 
+  @HostListener('document:paste', ['$event'])
+  onDocumentPaste(event: ClipboardEvent): void {
+    const tipo = this.evidenciaPegadoActiva();
+    if (!tipo || this.cropperVisible() || this.confirmRegistroVisible() || this.successModalVisible()) return;
+    this.procesarPegado(tipo, event);
+  }
+
+  activarPegado(tipo: EvidenciaTipo): void {
+    this.evidenciaPegadoActiva.set(tipo);
+    this.error.set('');
+  }
+
   private cargarCatalogos(): void {
     this.loadingCatalogos.set(true);
-
     this.api.getCatalogos().subscribe({
       next: data => {
         this.plazas.set((data.plazas ?? []).filter(p => p.activo));
@@ -136,11 +151,12 @@ export class AsistenciaFormComponent implements OnInit {
     const file = input.files?.[0];
     if (!file) return;
 
+    this.activarPegado(tipo);
     this.abrirEditorImagen(tipo, file);
     input.value = '';
   }
 
-  onEvidencePaste(tipo: EvidenciaTipo, event: ClipboardEvent): void {
+  private procesarPegado(tipo: EvidenciaTipo, event: ClipboardEvent): void {
     const items = event.clipboardData?.items;
     if (!items) {
       this.error.set('No se pudo acceder al portapapeles.');
@@ -148,14 +164,11 @@ export class AsistenciaFormComponent implements OnInit {
     }
 
     const imageItem = Array.from(items).find(item => item.type.startsWith('image/'));
-    if (!imageItem) {
-      this.error.set('El portapapeles no contiene una imagen. Copia la imagen desde DSS e inténtalo nuevamente.');
-      return;
-    }
+    if (!imageItem) return;
 
     const clipboardFile = imageItem.getAsFile();
     if (!clipboardFile) {
-      this.error.set('No se pudo leer la imagen copiada desde DSS.');
+      this.error.set('No se pudo leer la imagen copiada.');
       return;
     }
 
@@ -177,13 +190,13 @@ export class AsistenciaFormComponent implements OnInit {
       return;
     }
 
-    const maxSize = 10 * 1024 * 1024;
-    if (file.size > maxSize) {
+    if (file.size > 10 * 1024 * 1024) {
       this.error.set('Cada fotografía debe pesar como máximo 10 MB.');
       return;
     }
 
     this.error.set('');
+    this.evidenciaPegadoActiva.set(tipo);
     this.cropperTipo.set(tipo);
     this.cropperFile.set(file);
     this.cropperVisible.set(true);
@@ -209,15 +222,9 @@ export class AsistenciaFormComponent implements OnInit {
 
   private setEvidenceFile(tipo: EvidenciaTipo, file: File): void {
     switch (tipo) {
-      case 'CALENTAMIENTO':
-        this.evidenciaCalentamiento.set(file);
-        break;
-      case 'INICIO_TURNO':
-        this.evidenciaInicioTurno.set(file);
-        break;
-      case 'TAPONES_AUDITIVOS':
-        this.evidenciaTapones.set(file);
-        break;
+      case 'CALENTAMIENTO': this.evidenciaCalentamiento.set(file); break;
+      case 'INICIO_TURNO': this.evidenciaInicioTurno.set(file); break;
+      case 'TAPONES_AUDITIVOS': this.evidenciaTapones.set(file); break;
     }
   }
 
@@ -247,9 +254,27 @@ export class AsistenciaFormComponent implements OnInit {
     this.error.set('');
     this.form.markAllAsTouched();
 
+    if (!this.validarRegistro()) return;
+    this.confirmRegistroVisible.set(true);
+  }
+
+  cancelarConfirmacionRegistro(): void {
+    this.confirmRegistroVisible.set(false);
+  }
+
+  confirmarRegistro(): void {
+    this.confirmRegistroVisible.set(false);
+    this.ejecutarRegistro();
+  }
+
+  cerrarSuccessModal(): void {
+    this.successModalVisible.set(false);
+  }
+
+  private validarRegistro(): boolean {
     if (this.form.invalid) {
       this.error.set('Completa los campos obligatorios antes de registrar la asistencia.');
-      return;
+      return false;
     }
 
     const programados = Number(this.form.controls.programados.value ?? 0);
@@ -257,38 +282,42 @@ export class AsistenciaFormComponent implements OnInit {
 
     if (presentes > programados) {
       this.error.set('El personal presente no puede ser mayor al personal programado.');
-      return;
+      return false;
     }
 
     const expected = this.ausentesEsperados();
     if (this.ausencias.length !== expected) {
       this.error.set(`Debes registrar exactamente ${expected} ausencia(s).`);
-      return;
+      return false;
     }
 
     if (this.ausencias.invalid) {
       this.error.set('Completa el trabajador y motivo de todas las ausencias.');
-      return;
+      return false;
     }
 
     const absentIds = this.ausencias.controls.map(control => Number(control.get('trabajadorId')?.value));
     if (new Set(absentIds).size !== absentIds.length) {
       this.error.set('No puedes seleccionar al mismo trabajador ausente más de una vez.');
-      return;
+      return false;
     }
 
+    if (!this.evidenciaCalentamiento() || !this.evidenciaInicioTurno() || !this.evidenciaTapones()) {
+      this.error.set('Debes registrar las tres evidencias fotográficas: calentamiento, inicio de turno e inspección de tapones auditivos.');
+      return false;
+    }
+
+    return true;
+  }
+
+  private ejecutarRegistro(): void {
     const calentamiento = this.evidenciaCalentamiento();
     const inicioTurno = this.evidenciaInicioTurno();
     const tapones = this.evidenciaTapones();
-
-    if (!calentamiento || !inicioTurno || !tapones) {
-      this.error.set('Debes registrar las tres evidencias fotográficas: calentamiento, inicio de turno e inspección de tapones auditivos.');
-      return;
-    }
+    if (!calentamiento || !inicioTurno || !tapones) return;
 
     const raw = this.form.getRawValue();
     const ausencias = raw.ausencias as AusenciaFormValue[];
-
     this.saving.set(true);
 
     this.api.registrarAsistencia({
@@ -391,7 +420,10 @@ export class AsistenciaFormComponent implements OnInit {
 
   private finishSuccess(id: number): void {
     this.saving.set(false);
+    this.ultimoRegistroId.set(id);
     this.success.set(`Asistencia #${id} registrada correctamente con sus tres evidencias.`);
+    this.successModalVisible.set(true);
+    this.evidenciaPegadoActiva.set(null);
 
     this.evidenciaCalentamiento.set(null);
     this.evidenciaInicioTurno.set(null);
