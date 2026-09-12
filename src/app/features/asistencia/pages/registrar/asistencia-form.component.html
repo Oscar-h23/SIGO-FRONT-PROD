@@ -137,7 +137,19 @@
       <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <div class="mb-5 flex items-start gap-4">
           <div class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-blue-600 text-sm font-bold text-white">4</div>
-          <div><h2 class="text-lg font-semibold text-slate-950">Evidencias fotográficas</h2><p class="mt-1 text-sm text-slate-500">Las tres evidencias son obligatorias. Puedes seleccionar o pegar imágenes copiadas desde DSS.</p></div>
+          <div>
+            <h2 class="text-lg font-semibold text-slate-950">Evidencias fotográficas</h2>
+            <p class="mt-1 text-sm text-slate-500">Las tres evidencias son obligatorias. Para pegar una imagen, primero elige la tarjeta de destino y luego usa Ctrl+V o Cmd+V.</p>
+          </div>
+        </div>
+
+        <div class="mb-5 rounded-2xl border border-blue-200 bg-blue-50 p-4">
+          <p class="text-sm font-semibold text-blue-900">Cómo pegar una imagen copiada</p>
+          <ol class="mt-2 grid gap-2 text-sm text-blue-800 sm:grid-cols-3">
+            <li><span class="font-bold">1.</span> Haz clic en la evidencia que quieres completar.</li>
+            <li><span class="font-bold">2.</span> La tarjeta quedará marcada en azul.</li>
+            <li><span class="font-bold">3.</span> Presiona <kbd class="rounded border border-blue-300 bg-white px-1.5 py-0.5 text-xs font-semibold">Ctrl + V</kbd> o <kbd class="rounded border border-blue-300 bg-white px-1.5 py-0.5 text-xs font-semibold">Cmd + V</kbd>.</li>
+          </ol>
         </div>
 
         <div class="grid gap-4 lg:grid-cols-3">
@@ -146,16 +158,43 @@
             { tipo: 'INICIO_TURNO', titulo: 'Inicio de turno', file: evidenciaInicioTurno() },
             { tipo: 'TAPONES_AUDITIVOS', titulo: 'Tapones auditivos', file: evidenciaTapones() }
           ]; track e.tipo) {
-            <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4" (paste)="onEvidencePaste($any(e.tipo), $event)" tabindex="0">
-              <div class="mb-3"><h3 class="text-sm font-semibold text-slate-950">{{ e.titulo }}</h3><p class="text-xs text-slate-500">JPG, PNG o WEBP · máximo 10 MB</p></div>
+            <article
+              class="cursor-pointer rounded-2xl border-2 p-4 transition"
+              [class.border-blue-500]="evidenciaPegadoActiva() === e.tipo"
+              [class.bg-blue-50]="evidenciaPegadoActiva() === e.tipo"
+              [class.shadow-sm]="evidenciaPegadoActiva() === e.tipo"
+              [class.border-slate-200]="evidenciaPegadoActiva() !== e.tipo"
+              [class.bg-slate-50]="evidenciaPegadoActiva() !== e.tipo"
+              (click)="activarPegado($any(e.tipo))"
+            >
+              <div class="mb-3 flex items-start justify-between gap-3">
+                <div>
+                  <h3 class="text-sm font-semibold text-slate-950">{{ e.titulo }}</h3>
+                  <p class="text-xs text-slate-500">JPG, PNG o WEBP · máximo 10 MB</p>
+                </div>
+                @if (evidenciaPegadoActiva() === e.tipo) {
+                  <span class="rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-semibold text-white">Destino para pegar</span>
+                }
+              </div>
+
               @if (e.file) {
                 <div class="aspect-[10/7] overflow-hidden rounded-xl bg-slate-200"><img class="h-full w-full object-cover" [src]="fileUrl(e.file)" [alt]="e.titulo"></div>
-                <div class="mt-3 flex items-center justify-between gap-2"><span class="truncate text-xs text-slate-500">{{ e.file.name }}</span><button type="button" class="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600" (click)="removeEvidence($any(e.tipo))">Quitar</button></div>
+                <div class="mt-3 flex items-center justify-between gap-2">
+                  <span class="truncate text-xs text-slate-500">{{ e.file.name }}</span>
+                  <button type="button" class="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600" (click)="$event.stopPropagation(); removeEvidence($any(e.tipo))">Quitar</button>
+                </div>
               } @else {
-                <label class="grid aspect-[10/7] cursor-pointer place-items-center rounded-xl border-2 border-dashed border-slate-300 bg-white text-center transition hover:border-blue-400 hover:bg-blue-50">
-                  <div><p class="text-sm font-semibold text-slate-700">Seleccionar fotografía</p><p class="mt-1 text-xs text-slate-500">También puedes pegar con Ctrl/Cmd + V</p></div>
-                  <input type="file" class="hidden" accept="image/jpeg,image/png,image/webp" (change)="onEvidenceFile($any(e.tipo), $event)">
-                </label>
+                <div class="grid aspect-[10/7] place-items-center rounded-xl border-2 border-dashed border-slate-300 bg-white px-4 text-center">
+                  <div>
+                    <p class="text-sm font-semibold text-slate-800">Selecciona esta tarjeta para pegar</p>
+                    <p class="mt-1 text-xs text-slate-500">Luego presiona Ctrl+V / Cmd+V</p>
+                    <div class="my-3 flex items-center gap-3 text-xs text-slate-400"><span class="h-px flex-1 bg-slate-200"></span>o<span class="h-px flex-1 bg-slate-200"></span></div>
+                    <label class="inline-flex cursor-pointer rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700" (click)="$event.stopPropagation()">
+                      Seleccionar archivo
+                      <input type="file" class="hidden" accept="image/jpeg,image/png,image/webp" (change)="onEvidenceFile($any(e.tipo), $event)">
+                    </label>
+                  </div>
+                </div>
               }
             </article>
           }
@@ -181,4 +220,29 @@
     (cancelar)="onCropperCancel()"
     (confirmar)="onCropperConfirm($event)">
   </app-image-cropper-modal>
+
+  @if (confirmRegistroVisible()) {
+    <div class="fixed inset-0 z-[10000] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm" (click)="cancelarConfirmacionRegistro()">
+      <section class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+        <div class="grid h-12 w-12 place-items-center rounded-2xl bg-amber-100 text-2xl">?</div>
+        <h2 class="mt-4 text-xl font-semibold text-slate-950">¿Registrar esta asistencia?</h2>
+        <p class="mt-2 text-sm leading-6 text-slate-500">Se guardarán los datos del turno, las ausencias y las tres evidencias fotográficas. Revisa que todo esté correcto antes de continuar.</p>
+        <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button type="button" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50" (click)="cancelarConfirmacionRegistro()">Volver y revisar</button>
+          <button type="button" class="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700" (click)="confirmarRegistro()">Sí, registrar</button>
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (successModalVisible()) {
+    <div class="fixed inset-0 z-[10000] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm">
+      <section class="w-full max-w-md rounded-3xl bg-white p-6 text-center shadow-2xl" role="dialog" aria-modal="true">
+        <div class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-2xl font-bold text-emerald-700">✓</div>
+        <h2 class="mt-4 text-xl font-semibold text-slate-950">Registro completado</h2>
+        <p class="mt-2 text-sm leading-6 text-slate-500">La asistencia #{{ ultimoRegistroId() }} y sus tres evidencias se guardaron correctamente.</p>
+        <button type="button" class="mt-6 w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700" (click)="cerrarSuccessModal()">Entendido</button>
+      </section>
+    </div>
+  }
 </div>
