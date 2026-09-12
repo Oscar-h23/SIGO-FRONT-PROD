@@ -1,579 +1,128 @@
-<div class="page">
+<div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-5 sm:px-6 lg:px-8">
+  <header class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">Trazabilidad</p>
+    <h1 class="mt-2 text-2xl font-semibold text-slate-950 sm:text-3xl">Historial de asistencia</h1>
+    <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-500">Consulta registros, ausencias, evidencias y reportes PDF de cada turno.</p>
+  </header>
 
-  <div class="page-header">
-    <div>
-      <span class="eyebrow">
-        TRAZABILIDAD
-      </span>
-
-      <h1>
-        Historial de asistencia
-      </h1>
-
-      <p>
-        Consulta los registros, ausencias y
-        evidencias asociadas a cada turno.
-      </p>
+  <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <label class="space-y-2 text-sm font-medium text-slate-700">Desde
+        <input class="w-full rounded-xl border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" type="date" [(ngModel)]="inicio">
+      </label>
+      <label class="space-y-2 text-sm font-medium text-slate-700">Hasta
+        <input class="w-full rounded-xl border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" type="date" [(ngModel)]="fin">
+      </label>
+      <label class="space-y-2 text-sm font-medium text-slate-700">Plaza
+        <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5" [(ngModel)]="plazaId" (ngModelChange)="cambiarPlaza()">
+          <option [ngValue]="null">Todas las plazas</option>
+          @if (loadingPlazas()) { <option disabled>Cargando plazas...</option> }
+          @else { @for (plaza of plazas(); track plaza.id) { <option [ngValue]="plaza.id">{{ plaza.codigo }}</option> } }
+        </select>
+      </label>
+      <label class="space-y-2 text-sm font-medium text-slate-700">Turno
+        <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5" [(ngModel)]="turnoFiltro" (ngModelChange)="cambiarTurno()">
+          <option value="">Todos los turnos</option>
+          <option value="A">Turno A</option>
+          <option value="B">Turno B</option>
+          <option value="C">Turno C</option>
+        </select>
+      </label>
+      <div class="flex items-end">
+        <button class="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50" type="button" (click)="cargar()" [disabled]="loading()">{{ loading() ? 'Buscando...' : 'Buscar' }}</button>
+      </div>
     </div>
-  </div>
-
-  <!-- ========================= -->
-  <!-- FILTROS                   -->
-  <!-- ========================= -->
-
-  <section class="card filters">
-
-    <div class="form-field">
-      <label>Desde</label>
-      <input
-        class="form-control"
-        type="date"
-        [(ngModel)]="inicio"
-      >
-    </div>
-
-    <div class="form-field">
-      <label>Hasta</label>
-      <input
-        class="form-control"
-        type="date"
-        [(ngModel)]="fin"
-      >
-    </div>
-
-    <div class="form-field">
-      <label>Plaza</label>
-      <select
-        class="form-control"
-        [(ngModel)]="plazaId"
-        (ngModelChange)="cambiarPlaza()"
-      >
-        <option [ngValue]="null">
-          Todas las plazas
-        </option>
-
-        @if (loadingPlazas()) {
-          <option disabled>
-            Cargando plazas...
-          </option>
-        } @else {
-          @for (
-            plaza of plazas();
-            track plaza.id
-          ) {
-            <option [ngValue]="plaza.id">
-              {{ plaza.codigo }}
-            </option>
-          }
-        }
-      </select>
-    </div>
-
-    <div class="form-field">
-      <label>Turno</label>
-      <select
-        class="form-control"
-        [(ngModel)]="turnoFiltro"
-        (ngModelChange)="cambiarTurno()"
-      >
-        <option value="">
-          Todos los turnos
-        </option>
-        <option value="A">Turno A</option>
-        <option value="B">Turno B</option>
-        <option value="C">Turno C</option>
-      </select>
-    </div>
-
-    <button
-      class="btn btn-primary filter-search-btn"
-      type="button"
-      (click)="cargar()"
-      [disabled]="loading()"
-    >
-      {{ loading() ? 'Buscando...' : 'Buscar' }}
-    </button>
-
   </section>
 
-
-  <!-- ========================= -->
-  <!-- ERROR                     -->
-  <!-- ========================= -->
-
   @if (error()) {
-
-    <div class="alert alert-error history-alert">
-      {{ error() }}
-    </div>
-
+    <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{{ error() }}</div>
   }
 
-
-  <!-- ========================= -->
-  <!-- TABLA                     -->
-  <!-- ========================= -->
-
-  <section class="card table-card">
-
+  <section class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
     @if (loading()) {
-
-      <div class="empty-state">
-        Cargando historial…
-      </div>
-
+      <div class="p-8 text-center text-sm text-slate-500">Cargando historial...</div>
     } @else if (!registrosFiltrados().length) {
-
-      <div class="empty-state">
-
-        <strong>
-          No hay registros para mostrar
-        </strong>
-
-        <span>
-          No se encontraron asistencias
-          para los filtros seleccionados.
-        </span>
-
-      </div>
-
+      <div class="p-10 text-center"><p class="font-semibold text-slate-900">No hay registros para mostrar</p><p class="mt-1 text-sm text-slate-500">No se encontraron asistencias para los filtros seleccionados.</p></div>
     } @else {
-
-      <div class="table-wrap">
-
-        <table>
-
-          <!-- CABECERA -->
-          <thead>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200 text-sm">
+          <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr>
-              <th>Fecha</th>
-              <th>Plaza</th>
-              <th>Turno</th>
-              <th>Controlador</th>
-              <th>Personal</th>
-              <th>Apoyo</th>
-              <th>Asistencia</th>
-              <th>Acciones</th>
+              <th class="px-5 py-3">Fecha</th><th class="px-5 py-3">Plaza</th><th class="px-5 py-3">Turno</th><th class="px-5 py-3">Controlador</th><th class="px-5 py-3">Personal</th><th class="px-5 py-3">Apoyo</th><th class="px-5 py-3">Asistencia</th><th class="px-5 py-3 text-right">Acciones</th>
             </tr>
           </thead>
-
-
-          <!-- CONTENIDO -->
-          <tbody>
-
-            @for (
-              r of registrosPaginados();
-              track r.id
-            ) {
-
-              <!-- ========================= -->
-              <!-- FILA PRINCIPAL            -->
-              <!-- ========================= -->
-
-              <tr class="main-row">
-
-                <!-- FECHA -->
-                <td>
-
-                  <strong>
-                    {{
-                      r.fecha
-                        | date:'dd/MM/yyyy':'UTC'
-                    }}
-                  </strong>
-</td>
-
-
-                <!-- PLAZA -->
-                <td>
-
-                  <span class="plaza-chip">
-                    {{ r.plaza }}
-                  </span>
-
-                </td>
-
-
-                <!-- TURNO -->
-                <td>
-
-                  <strong>
-                    {{ r.turno }}
-                  </strong>
-
-                </td>
-
-
-                <!-- CONTROLADOR -->
-                <td class="controller">
-
-                  {{ r.controlador }}
-
-                </td>
-
-
-                <!-- PERSONAL -->
-                <td>
-
-                  {{ r.presentes }}
-                  /
-                  {{ r.programados }}
-
-                  <small>
-                    {{ r.ausentes }}
-                    ausente(s)
-                  </small>
-
-                </td>
-
-
-                <!-- APOYO -->
-                <td>
-
-                  <span class="support-chip">
-                    {{ r.apoyoSolicitado  }}
-                  </span>
-
-                </td>
-
-
-                <!-- PORCENTAJE -->
-                <td>
-
-                  <span
-                    class="percent"
-                    [ngClass]="
-                      badgeClass(
-                        r.porcentaje
-                      )
-                    "
-                  >
-
-                    {{
-                      r.porcentaje
-                        .toFixed(1)
-                    }}%
-
-                  </span>
-
-                </td>
-
-
-                <!-- ACCIONES -->
-                <td>
-
-                  <div class="action-buttons">
-
-                    <!-- VER DETALLE -->
-                    <button
-                      class="action-btn action-detail"
-                      type="button"
-                      (click)="abrirDetalle(r)"
-                    >
-                      Detalle
-                    </button>
-
-
-                    <!-- EDITAR -->
-                    <a
-                      class="action-btn action-edit"
-                      [routerLink]="[
-                        '/asistencia/historial/editar',
-                        r.id
-                      ]"
-                    >
-                      Editar
-                    </a>
-                    <!-- GENERAR PDF -->
-                      <button
-                        class="action-btn action-pdf"
-                        type="button"
-                        (click)="generarPdf(r)"
-                        [disabled]="generandoPdfId() !== null"
-                      >
-                        @if (
-                          generandoPdfId() === r.id
-                        ) {
-                          Generando...
-                        } @else {
-                          Generar PDF
-                        }
-                      </button>
-
-
+          <tbody class="divide-y divide-slate-100 bg-white">
+            @for (r of registrosPaginados(); track r.id) {
+              <tr class="transition hover:bg-slate-50">
+                <td class="whitespace-nowrap px-5 py-4 font-semibold text-slate-900">{{ r.fecha | date:'dd/MM/yyyy':'UTC' }}</td>
+                <td class="px-5 py-4"><span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">{{ r.plaza }}</span></td>
+                <td class="px-5 py-4 font-semibold text-slate-800">{{ r.turno }}</td>
+                <td class="min-w-[180px] px-5 py-4 text-slate-600">{{ r.controlador }}</td>
+                <td class="px-5 py-4"><span class="font-semibold text-slate-900">{{ r.presentes }}/{{ r.programados }}</span><span class="mt-1 block text-xs text-slate-500">{{ r.ausentes }} ausente(s)</span></td>
+                <td class="px-5 py-4"><span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{{ r.apoyoSolicitado }}</span></td>
+                <td class="px-5 py-4"><span class="rounded-full px-3 py-1 text-xs font-bold" [class.bg-emerald-50]="r.porcentaje >= 95" [class.text-emerald-700]="r.porcentaje >= 95" [class.bg-amber-50]="r.porcentaje < 95" [class.text-amber-700]="r.porcentaje < 95">{{ r.porcentaje.toFixed(1) }}%</span></td>
+                <td class="px-5 py-4">
+                  <div class="flex flex-wrap justify-end gap-2">
+                    <button class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50" type="button" (click)="abrirDetalle(r)">Detalle</button>
+                    <a class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100" [routerLink]="['/asistencia/historial/editar', r.id]">Editar</a>
+                    <button class="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50" type="button" (click)="generarPdf(r)" [disabled]="generandoPdfId() !== null">@if (generandoPdfId() === r.id) { Generando... } @else { PDF }</button>
                   </div>
-
                 </td>
-
               </tr>
-
-
-              
-
             }
-
           </tbody>
-
         </table>
-
       </div>
 
-      <div class="pagination-bar">
-        <div class="pagination-info">
-          Mostrando
-          <strong>{{ primerRegistroPagina() }}</strong>
-          -
-          <strong>{{ ultimoRegistroPagina() }}</strong>
-          de
-          <strong>{{ registrosFiltrados().length }}</strong>
-          registros
-        </div>
-
+      <div class="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-sm text-slate-500">Mostrando <strong class="text-slate-700">{{ primerRegistroPagina() }}</strong> - <strong class="text-slate-700">{{ ultimoRegistroPagina() }}</strong> de <strong class="text-slate-700">{{ registrosFiltrados().length }}</strong> registros</p>
         @if (totalPaginas() > 1) {
-          <nav
-            class="pagination"
-            aria-label="Paginación del historial"
-          >
-            <button
-              type="button"
-              class="page-btn page-nav"
-              (click)="cambiarPagina(paginaActual - 1)"
-              [disabled]="paginaActual === 1"
-            >
-              Anterior
-            </button>
-
-            @for (
-              pagina of paginasVisibles();
-              track pagina
-            ) {
-              <button
-                type="button"
-                class="page-btn"
-                [class.active]="paginaActual === pagina"
-                (click)="cambiarPagina(pagina)"
-              >
-                {{ pagina }}
-              </button>
+          <nav class="flex flex-wrap gap-2" aria-label="Paginación del historial">
+            <button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 disabled:opacity-40" (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">Anterior</button>
+            @for (pagina of paginasVisibles(); track pagina) {
+              <button type="button" class="rounded-lg border px-3 py-2 text-xs font-semibold" [class.border-blue-600]="paginaActual === pagina" [class.bg-blue-600]="paginaActual === pagina" [class.text-white]="paginaActual === pagina" [class.border-slate-300]="paginaActual !== pagina" [class.text-slate-700]="paginaActual !== pagina" (click)="cambiarPagina(pagina)">{{ pagina }}</button>
             }
-
-            <button
-              type="button"
-              class="page-btn page-nav"
-              (click)="cambiarPagina(paginaActual + 1)"
-              [disabled]="paginaActual === totalPaginas()"
-            >
-              Siguiente
-            </button>
+            <button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 disabled:opacity-40" (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas()">Siguiente</button>
           </nav>
         }
       </div>
-
     }
-
   </section>
 
-
-
-  <!-- ========================= -->
-  <!-- MODAL DETALLE             -->
-  <!-- ========================= -->
-
   @if (detalleSeleccionado()) {
-    <div
-      class="modal-backdrop"
-      (click)="cerrarDetalle()"
-    >
-      <section
-        class="detail-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="detalleModalTitle"
-        (click)="$event.stopPropagation()"
-      >
-        <header class="detail-modal-header">
-          <div>
-            <span class="eyebrow">DETALLE DEL REGISTRO</span>
-            <h2 id="detalleModalTitle">
-              {{ detalleSeleccionado()!.plaza }}
-              · Turno {{ detalleSeleccionado()!.turno }}
-            </h2>
-            <p>
-              {{
-                detalleSeleccionado()!.fecha
-                  | date:'dd/MM/yyyy':'UTC'
-              }}
-              · {{ detalleSeleccionado()!.controlador }}
-            </p>
-          </div>
-
-          <button
-            class="modal-close"
-            type="button"
-            aria-label="Cerrar detalle"
-            (click)="cerrarDetalle()"
-          >
-            ×
-          </button>
+    <div class="fixed inset-0 z-[9998] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm" (click)="cerrarDetalle()">
+      <section class="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-3xl bg-white shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="detalleModalTitle" (click)="$event.stopPropagation()">
+        <header class="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-5 sm:px-6">
+          <div><p class="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">Detalle del registro</p><h2 id="detalleModalTitle" class="mt-1 text-xl font-semibold text-slate-950">{{ detalleSeleccionado()!.plaza }} · Turno {{ detalleSeleccionado()!.turno }}</h2><p class="mt-1 text-sm text-slate-500">{{ detalleSeleccionado()!.fecha | date:'dd/MM/yyyy':'UTC' }} · {{ detalleSeleccionado()!.controlador }}</p></div>
+          <button class="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 text-2xl text-slate-500" type="button" aria-label="Cerrar detalle" (click)="cerrarDetalle()">×</button>
         </header>
 
-        <div class="detail-modal-body">
-
-          <section class="modal-summary-grid">
-            <article class="modal-stat">
-              <span>Presentes</span>
-              <strong>{{ detalleSeleccionado()!.presentes }}</strong>
-            </article>
-
-            <article class="modal-stat">
-              <span>Programados</span>
-              <strong>{{ detalleSeleccionado()!.programados }}</strong>
-            </article>
-
-            <article class="modal-stat">
-              <span>Ausentes</span>
-              <strong>{{ detalleSeleccionado()!.ausentes }}</strong>
-            </article>
-
-            <article class="modal-stat">
-              <span>Apoyo</span>
-              <strong>{{ detalleSeleccionado()!.apoyoSolicitado }}</strong>
-            </article>
-
-            <article class="modal-stat">
-              <span>Asistencia</span>
-              <strong>{{ detalleSeleccionado()!.porcentaje.toFixed(1) }}%</strong>
-            </article>
+        <div class="space-y-6 p-5 sm:p-6">
+          <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <article class="rounded-2xl bg-slate-50 p-4"><span class="text-xs text-slate-500">Presentes</span><strong class="mt-1 block text-2xl text-slate-950">{{ detalleSeleccionado()!.presentes }}</strong></article>
+            <article class="rounded-2xl bg-slate-50 p-4"><span class="text-xs text-slate-500">Programados</span><strong class="mt-1 block text-2xl text-slate-950">{{ detalleSeleccionado()!.programados }}</strong></article>
+            <article class="rounded-2xl bg-slate-50 p-4"><span class="text-xs text-slate-500">Ausentes</span><strong class="mt-1 block text-2xl text-slate-950">{{ detalleSeleccionado()!.ausentes }}</strong></article>
+            <article class="rounded-2xl bg-slate-50 p-4"><span class="text-xs text-slate-500">Apoyo</span><strong class="mt-1 block text-2xl text-slate-950">{{ detalleSeleccionado()!.apoyoSolicitado }}</strong></article>
+            <article class="rounded-2xl bg-blue-50 p-4"><span class="text-xs text-blue-600">Asistencia</span><strong class="mt-1 block text-2xl text-blue-700">{{ detalleSeleccionado()!.porcentaje.toFixed(1) }}%</strong></article>
           </section>
 
-          <div class="detail-modal-grid">
-
-            <section class="modal-section">
-              <h3>Ausencias</h3>
-
-              @if (detalleSeleccionado()!.ausencias.length) {
-                <div class="absence-items">
-                  @for (
-                    a of detalleSeleccionado()!.ausencias;
-                    track a.id
-                  ) {
-                    <div class="absence-item">
-                      <strong>
-                        {{ a.codigoTrabajador }}
-                        ·
-                        {{ a.nombreTrabajador }}
-                      </strong>
-
-                      <span>
-                        {{ a.motivo }}
-                      </span>
-
-                      @if (a.observacion) {
-                        <p>
-                          {{ a.observacion }}
-                        </p>
-                      }
-                    </div>
-                  }
-                </div>
-              } @else {
-                <p class="muted">
-                  Sin ausencias registradas.
-                </p>
-              }
+          <div class="grid gap-6 lg:grid-cols-2">
+            <section class="rounded-2xl border border-slate-200 p-4"><h3 class="font-semibold text-slate-950">Ausencias</h3>
+              @if (detalleSeleccionado()!.ausencias.length) { <div class="mt-4 space-y-3">@for (a of detalleSeleccionado()!.ausencias; track a.id) { <div class="rounded-xl bg-slate-50 p-3"><strong class="text-sm text-slate-900">{{ a.codigoTrabajador }} · {{ a.nombreTrabajador }}</strong><span class="mt-1 block text-xs font-medium text-slate-600">{{ a.motivo }}</span>@if (a.observacion) { <p class="mt-2 text-xs text-slate-500">{{ a.observacion }}</p> }</div> }</div> } @else { <p class="mt-3 text-sm text-slate-500">Sin ausencias registradas.</p> }
             </section>
-
-            <section class="modal-section">
-              <h3>Evidencias</h3>
-
-              @if (detalleSeleccionado()!.evidencias.length) {
-                <div class="evidence-grid modal-evidence-grid">
-                  @for (
-                    e of detalleSeleccionado()!.evidencias;
-                    track e.id
-                  ) {
-                    <a
-                      [href]="e.urlArchivo"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <img
-                        [src]="e.urlArchivo"
-                        alt="Evidencia de asistencia"
-                      >
-                    </a>
-                  }
-                </div>
-              } @else {
-                <p class="muted">
-                  Sin evidencias adjuntas.
-                </p>
-              }
+            <section class="rounded-2xl border border-slate-200 p-4"><h3 class="font-semibold text-slate-950">Evidencias</h3>
+              @if (detalleSeleccionado()!.evidencias.length) { <div class="mt-4 grid gap-3 sm:grid-cols-2">@for (e of detalleSeleccionado()!.evidencias; track e.id) { <a [href]="e.urlArchivo" target="_blank" rel="noopener noreferrer" class="overflow-hidden rounded-xl border border-slate-200 bg-slate-100"><img class="aspect-[10/7] w-full object-cover" [src]="e.urlArchivo" alt="Evidencia de asistencia"></a> }</div> } @else { <p class="mt-3 text-sm text-slate-500">Sin evidencias adjuntas.</p> }
             </section>
-
-            <section class="modal-section">
-              <h3>Personal de apoyo</h3>
-
-              <p>
-                <strong>
-                  {{ detalleSeleccionado()!.apoyoSolicitado }}
-                </strong>
-                persona(s) de apoyo.
-              </p>
-
-              @if (
-                detalleSeleccionado()!.apoyoSolicitado > 0 &&
-                detalleSeleccionado()!.detalleApoyo
-              ) {
-                <p class="support-detail">
-                  {{ detalleSeleccionado()!.detalleApoyo }}
-                </p>
-              }
-            </section>
-
-            <section class="modal-section">
-              <h3>Notas</h3>
-
-              <p>
-                {{
-                  detalleSeleccionado()!.notas ||
-                  'Sin observaciones.'
-                }}
-              </p>
-            </section>
-
+            <section class="rounded-2xl border border-slate-200 p-4"><h3 class="font-semibold text-slate-950">Personal de apoyo</h3><p class="mt-3 text-sm text-slate-600"><strong>{{ detalleSeleccionado()!.apoyoSolicitado }}</strong> persona(s) de apoyo.</p>@if (detalleSeleccionado()!.apoyoSolicitado > 0 && detalleSeleccionado()!.detalleApoyo) { <p class="mt-2 text-sm text-slate-500">{{ detalleSeleccionado()!.detalleApoyo }}</p> }</section>
+            <section class="rounded-2xl border border-slate-200 p-4"><h3 class="font-semibold text-slate-950">Notas</h3><p class="mt-3 text-sm text-slate-600">{{ detalleSeleccionado()!.notas || 'Sin observaciones.' }}</p></section>
           </div>
         </div>
 
-        <footer class="detail-modal-footer">
-          <a
-            class="action-btn action-edit"
-            [routerLink]="[
-              '/asistencia/historial/editar',
-              detalleSeleccionado()!.id
-            ]"
-            (click)="cerrarDetalle()"
-          >
-            Editar
-          </a>
-
-          <button
-            class="action-btn action-pdf"
-            type="button"
-            (click)="generarPdf(detalleSeleccionado()!)"
-            [disabled]="generandoPdfId() !== null"
-          >
-            @if (
-              generandoPdfId() === detalleSeleccionado()!.id
-            ) {
-              Generando...
-            } @else {
-              Generar PDF
-            }
-          </button>
+        <footer class="flex flex-col-reverse gap-3 border-t border-slate-200 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+          <a class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-center text-sm font-semibold text-blue-700" [routerLink]="['/asistencia/historial/editar', detalleSeleccionado()!.id]" (click)="cerrarDetalle()">Editar</a>
+          <button class="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50" type="button" (click)="generarPdf(detalleSeleccionado()!)" [disabled]="generandoPdfId() !== null">@if (generandoPdfId() === detalleSeleccionado()!.id) { Generando... } @else { Generar PDF }</button>
         </footer>
       </section>
     </div>
   }
-
 </div>
