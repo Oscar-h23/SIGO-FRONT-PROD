@@ -1,835 +1,175 @@
-<div class="page">
-
-  <div class="page-header">
-
+<div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-5 sm:px-6 lg:px-8">
+  <header class="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
     <div>
-      <h1>Editar asistencia</h1>
-
-      <p>
-        Modifica la información del registro,
-        las ausencias y las evidencias.
-      </p>
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">Gestión de asistencia</p>
+      <h1 class="mt-2 text-2xl font-semibold text-slate-950 sm:text-3xl">Editar asistencia</h1>
+      <p class="mt-2 text-sm text-slate-500">Modifica datos, ausencias y evidencias del registro.</p>
     </div>
-
-    <button
-      type="button"
-      class="btn btn-secondary"
-      (click)="volver()"
-    >
-      Volver
-    </button>
-
-  </div>
+    <button type="button" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50" (click)="volver()">Volver</button>
+  </header>
 
   @if (loading()) {
-
-    <div class="state-card">
-      Cargando información...
-    </div>
-
+    <div class="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-sm">Cargando información...</div>
   } @else {
-
     @if (error()) {
-
-      <div class="alert alert-error">
-        {{ error() }}
-      </div>
-
+      <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{{ error() }}</div>
     }
-
     @if (success()) {
-
-      <div class="alert alert-success">
-        {{ success() }}
-      </div>
-
+      <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{{ success() }}</div>
     }
 
-    <form
-      class="edit-form"
-      (ngSubmit)="guardar()"
-    >
+    <form class="space-y-6" (ngSubmit)="guardar()">
+      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <h2 class="text-lg font-semibold text-slate-950">Información general</h2>
+        <p class="mt-1 text-sm text-slate-500">Actualiza los datos principales de la asistencia.</p>
 
-      <!-- ========================================= -->
-      <!-- INFORMACIÓN GENERAL                      -->
-      <!-- ========================================= -->
+        <div class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <label class="space-y-2 text-sm font-medium text-slate-700">Plaza
+            <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" name="plaza" [(ngModel)]="plazaId" (ngModelChange)="cambiarPlaza()" [disabled]="saving() || loadingCatalogos()" required>
+              <option [ngValue]="null" disabled>Seleccione una plaza</option>
+              @for (plaza of plazas(); track plaza.id) { <option [ngValue]="plaza.id">{{ plaza.codigo }} @if (plaza.descripcion) { · {{ plaza.descripcion }} }</option> }
+            </select>
+          </label>
 
-      <section class="card">
+          <label class="space-y-2 text-sm font-medium text-slate-700">Turno
+            <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" name="turno" [(ngModel)]="turnoId" (ngModelChange)="cambiarTurno()" [disabled]="saving() || loadingCatalogos()" required>
+              <option [ngValue]="null" disabled>Seleccione un turno</option>
+              @for (turno of turnos(); track turno.id) { <option [ngValue]="turno.id">{{ turno.codigo }} · {{ turno.nombre }}</option> }
+            </select>
+          </label>
 
-        <div class="section-header">
+          <label class="space-y-2 text-sm font-medium text-slate-700">Controlador
+            <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-slate-100" name="controlador" [(ngModel)]="controladorId" [disabled]="saving() || loadingPersonal() || !plazaId" required>
+              <option [ngValue]="null" disabled>@if (loadingPersonal()) { Cargando controladores... } @else { Seleccione un controlador }</option>
+              @for (controlador of controladores(); track controlador.id) { <option [ngValue]="controlador.id">{{ controlador.codigo }} · {{ controlador.nombreCompleto }}</option> }
+            </select>
+          </label>
 
-          <div>
-            <h2>Información general</h2>
-
-            <p>
-              Actualiza los datos principales
-              de la asistencia.
-            </p>
-          </div>
-
+          <label class="space-y-2 text-sm font-medium text-slate-700">Fecha
+            <input class="w-full rounded-xl border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" name="fecha" type="date" [(ngModel)]="fecha" [disabled]="saving()" required>
+          </label>
         </div>
-
-        <div class="form-grid">
-
-          <!-- PLAZA -->
-          <div class="field">
-
-            <label for="plaza">
-              Plaza
-            </label>
-
-            <select
-              id="plaza"
-              name="plaza"
-              [(ngModel)]="plazaId"
-              (ngModelChange)="cambiarPlaza()"
-              [disabled]="saving() || loadingCatalogos()"
-              required
-            >
-
-              <option
-                [ngValue]="null"
-                disabled
-              >
-                Seleccione una plaza
-              </option>
-
-              @for (plaza of plazas(); track plaza.id) {
-
-                <option
-                  [ngValue]="plaza.id"
-                >
-                  {{ plaza.codigo }}
-                  @if (plaza.descripcion) {
-                    - {{ plaza.descripcion }}
-                  }
-                </option>
-
-              }
-
-            </select>
-
-          </div>
-
-          <!-- TURNO -->
-          <div class="field">
-
-            <label for="turno">
-              Turno
-            </label>
-
-            <select
-              id="turno"
-              name="turno"
-              [(ngModel)]="turnoId"
-              (ngModelChange)="cambiarTurno()"
-              [disabled]="saving() || loadingCatalogos()"
-              required
-            >
-
-              <option
-                [ngValue]="null"
-                disabled
-              >
-                Seleccione un turno
-              </option>
-
-              @for (turno of turnos(); track turno.id) {
-
-                <option
-                  [ngValue]="turno.id"
-                >
-                  {{ turno.codigo }} - {{ turno.nombre }}
-                </option>
-
-              }
-
-            </select>
-
-          </div>
-
-          <!-- CONTROLADOR -->
-          <div class="field">
-
-            <label for="controlador">
-              Controlador
-            </label>
-
-            <select
-              id="controlador"
-              name="controlador"
-              [(ngModel)]="controladorId"
-              [disabled]="
-                saving()
-                || loadingPersonal()
-                || !plazaId
-              "
-              required
-            >
-
-              <option
-                [ngValue]="null"
-                disabled
-              >
-                @if (loadingPersonal()) {
-                  Cargando controladores...
-                } @else {
-                  Seleccione un controlador
-                }
-              </option>
-
-              @for (
-                controlador of controladores();
-                track controlador.id
-              ) {
-
-                <option
-                  [ngValue]="controlador.id"
-                >
-                  {{ controlador.codigo }}
-                  - {{ controlador.nombreCompleto }}
-                </option>
-
-              }
-
-            </select>
-
-          </div>
-
-          <!-- FECHA -->
-          <div class="field">
-
-            <label for="fecha">
-              Fecha
-            </label>
-
-            <input
-              id="fecha"
-              name="fecha"
-              type="date"
-              [(ngModel)]="fecha"
-              [disabled]="saving()"
-              required
-            />
-
-          </div>
-
-        </div>
-
       </section>
 
-      <!-- ========================================= -->
-      <!-- PERSONAL                                  -->
-      <!-- ========================================= -->
+      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <h2 class="text-lg font-semibold text-slate-950">Personal</h2>
+        <p class="mt-1 text-sm text-slate-500">Ajusta programados, presentes y apoyo.</p>
 
-      <section class="card">
-
-        <div class="section-header">
-
-          <div>
-            <h2>Personal</h2>
-
-            <p>
-              Ajusta la cantidad de personal
-              programado y presente.
-            </p>
-          </div>
-
-        </div>
-
-        <div class="stats-grid">
-
-          <!-- PROGRAMADOS -->
-          <div class="field">
-
-            <label for="programados">
-              Programados
-            </label>
-
-            <input
-              id="programados"
-              name="programados"
-              type="number"
-              min="0"
-              [(ngModel)]="programados"
-              (ngModelChange)="cambiarPresentes()"
-              [disabled]="saving()"
-              required
-            />
-
-          </div>
-
-          <!-- PRESENTES -->
-          <div class="field">
-
-            <label for="presentes">
-              Presentes
-            </label>
-
-            <input
-              id="presentes"
-              name="presentes"
-              type="number"
-              min="0"
-              [max]="programados"
-              [(ngModel)]="presentes"
-              (ngModelChange)="cambiarPresentes()"
-              [disabled]="saving()"
-              required
-            />
-
-          </div>
-
-          <!-- AUSENTES -->
-          <div class="summary-box">
-
-            <span class="summary-label">
-              Ausentes
-            </span>
-
-            <strong class="summary-value">
-              {{ cantidadAusentes }}
-            </strong>
-
-          </div>
-
-          <!-- APOYO SOLICITADO -->
-          <div class="field">
-
-            <label for="apoyoSolicitado">
-              Apoyo solicitado
-            </label>
-
-            <input
-              id="apoyoSolicitado"
-              name="apoyoSolicitado"
-              type="number"
-              min="0"
-              step="1"
-              [(ngModel)]="apoyoSolicitado"
-              [disabled]="saving()"
-              required
-            />
-
-            <small class="field-help">
-              Personal adicional coordinado para apoyar el turno.
-              No modifica el porcentaje de asistencia.
-            </small>
-
-          </div>
-
-          <!-- PORCENTAJE -->
-          <div class="summary-box">
-
-            <span class="summary-label">
-              Asistencia
-            </span>
-
-            <strong class="summary-value">
-
-              @if (programados > 0) {
-
-                {{
-                  (
-                    presentes
-                    / programados
-                    * 100
-                  )
-                  | number:'1.0-2'
-                }}%
-
-              } @else {
-
-                0%
-
-              }
-
-            </strong>
-
-          </div>
-
+        <div class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <label class="space-y-2 text-sm font-medium text-slate-700">Programados
+            <input class="w-full rounded-xl border border-slate-300 px-3 py-2.5" name="programados" type="number" min="0" [(ngModel)]="programados" (ngModelChange)="cambiarPresentes()" [disabled]="saving()" required>
+          </label>
+          <label class="space-y-2 text-sm font-medium text-slate-700">Presentes
+            <input class="w-full rounded-xl border border-slate-300 px-3 py-2.5" name="presentes" type="number" min="0" [max]="programados" [(ngModel)]="presentes" (ngModelChange)="cambiarPresentes()" [disabled]="saving()" required>
+          </label>
+          <div class="rounded-2xl bg-slate-50 p-4"><span class="text-xs text-slate-500">Ausentes</span><strong class="mt-1 block text-2xl text-slate-950">{{ cantidadAusentes }}</strong></div>
+          <label class="space-y-2 text-sm font-medium text-slate-700">Apoyo solicitado
+            <input class="w-full rounded-xl border border-slate-300 px-3 py-2.5" name="apoyoSolicitado" type="number" min="0" [(ngModel)]="apoyoSolicitado" [disabled]="saving()" required>
+          </label>
+          <div class="rounded-2xl bg-blue-50 p-4"><span class="text-xs text-blue-600">Asistencia</span><strong class="mt-1 block text-2xl text-blue-700">@if (programados > 0) { {{ (presentes / programados * 100) | number:'1.0-2' }}% } @else { 0% }</strong></div>
         </div>
 
         @if (apoyoSolicitado > 0) {
-
-          <div class="field support-detail">
-
-            <label for="detalleApoyo">
-              Detalle del apoyo
-            </label>
-
-            <textarea
-              id="detalleApoyo"
-              name="detalleApoyo"
-              rows="3"
-              maxlength="500"
-              [(ngModel)]="detalleApoyo"
-              [disabled]="saving()"
-              placeholder="Ej.: Se solicitó apoyo de un agente de otra plaza."
-            ></textarea>
-
-            <small class="field-help">
-              Describe brevemente el apoyo coordinado.
-            </small>
-
-          </div>
-
+          <label class="mt-4 block space-y-2 text-sm font-medium text-slate-700">Detalle del apoyo
+            <textarea class="w-full rounded-xl border border-slate-300 px-3 py-2.5" name="detalleApoyo" rows="3" maxlength="500" [(ngModel)]="detalleApoyo" [disabled]="saving()"></textarea>
+          </label>
         }
-
       </section>
 
-      <!-- ========================================= -->
-      <!-- AUSENCIAS                                 -->
-      <!-- ========================================= -->
-
-      <section class="card">
-
-        <div class="section-header">
-
-          <div>
-            <h2>Ausencias</h2>
-
-            <p>
-              Registra el trabajador ausente,
-              el motivo y una observación.
-            </p>
-          </div>
-
-          <div class="section-count">
-            {{ cantidadAusentes }}
-            ausencia(s)
-          </div>
-
+      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <div class="flex items-center justify-between gap-3">
+          <div><h2 class="text-lg font-semibold text-slate-950">Ausencias</h2><p class="mt-1 text-sm text-slate-500">Registra trabajador, motivo y observación.</p></div>
+          <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{{ cantidadAusentes }} ausencia(s)</span>
         </div>
 
         @if (cantidadAusentes === 0) {
-
-          <div class="empty-state">
-
-            No existen ausencias para este registro.
-
-          </div>
-
+          <div class="mt-5 rounded-2xl bg-slate-50 p-5 text-sm text-slate-500">No existen ausencias para este registro.</div>
         } @else {
-
-          <div class="absence-list">
-
-            @for (
-              ausencia of ausencias;
-              track $index;
-              let i = $index
-            ) {
-
-              <div class="absence-card">
-
-                <div class="absence-header">
-
-                  <strong>
-                    Ausencia {{ i + 1 }}
-                  </strong>
-
-                </div>
-
-                <div class="absence-grid">
-
-                  <!-- TRABAJADOR -->
-                  <div class="field">
-
-                    <label
-                      [for]="'trabajador-' + i"
-                    >
-                      Trabajador
-                    </label>
-
-                    <select
-                      [id]="'trabajador-' + i"
-                      [name]="'trabajador-' + i"
-                      [(ngModel)]="
-                        ausencias[i].trabajadorId
-                      "
-                      [disabled]="
-                        saving()
-                        || loadingPersonal()
-                        || !plazaId
-                      "
-                      required
-                    >
-
-                      <option
-                        [ngValue]="0"
-                        disabled
-                      >
-                        Seleccione un trabajador
-                      </option>
-
-                      @for (
-                        trabajador
-                        of agentesDisponibles(i);
-                        track trabajador.id
-                      ) {
-
-                        <option
-                          [ngValue]="trabajador.id"
-                        >
-                          {{ trabajador.codigo }}
-                          -
-                          {{ trabajador.nombreCompleto }}
-                        </option>
-
-                      }
-
+          <div class="mt-5 space-y-4">
+            @for (ausencia of ausencias; track $index; let i = $index) {
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <strong class="text-sm text-slate-900">Ausencia {{ i + 1 }}</strong>
+                <div class="mt-4 grid gap-4 md:grid-cols-2">
+                  <label class="space-y-2 text-sm font-medium text-slate-700">Trabajador
+                    <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5" [name]="'trabajador-' + i" [(ngModel)]="ausencias[i].trabajadorId" [disabled]="saving() || loadingPersonal() || !plazaId" required>
+                      <option [ngValue]="0" disabled>Seleccione un trabajador</option>
+                      @for (trabajador of agentesDisponibles(i); track trabajador.id) { <option [ngValue]="trabajador.id">{{ trabajador.codigo }} · {{ trabajador.nombreCompleto }}</option> }
                     </select>
-
-                  </div>
-
-                  <!-- MOTIVO -->
-                  <div class="field">
-
-                    <label
-                      [for]="'motivo-' + i"
-                    >
-                      Motivo
-                    </label>
-
-                    <select
-                      [id]="'motivo-' + i"
-                      [name]="'motivo-' + i"
-                      [(ngModel)]="
-                        ausencias[i].motivoId
-                      "
-                      [disabled]="saving()"
-                      required
-                    >
-
-                      <option
-                        [ngValue]="0"
-                        disabled
-                      >
-                        Seleccione un motivo
-                      </option>
-
-                      @for (
-                        motivo of motivos();
-                        track motivo.id
-                      ) {
-
-                        <option
-                          [ngValue]="motivo.id"
-                        >
-                          {{ motivo.nombre }}
-                        </option>
-
-                      }
-
+                  </label>
+                  <label class="space-y-2 text-sm font-medium text-slate-700">Motivo
+                    <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5" [name]="'motivo-' + i" [(ngModel)]="ausencias[i].motivoId" [disabled]="saving()" required>
+                      <option [ngValue]="0" disabled>Seleccione un motivo</option>
+                      @for (motivo of motivos(); track motivo.id) { <option [ngValue]="motivo.id">{{ motivo.nombre }}</option> }
                     </select>
-
-                  </div>
-
-                  <!-- OBSERVACIÓN -->
-                  <div class="field field-full">
-
-                    <label
-                      [for]="'observacion-' + i"
-                    >
-                      Observación
-                    </label>
-
-                    <textarea
-                      [id]="'observacion-' + i"
-                      [name]="'observacion-' + i"
-                      rows="3"
-                      maxlength="255"
-                      [(ngModel)]="
-                        ausencias[i].observacion
-                      "
-                      [disabled]="saving()"
-                      placeholder="Ingrese una observación opcional"
-                    ></textarea>
-
-                  </div>
-
+                  </label>
                 </div>
-
+                <label class="mt-4 block space-y-2 text-sm font-medium text-slate-700">Observación
+                  <textarea class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5" [name]="'observacion-' + i" rows="2" maxlength="255" [(ngModel)]="ausencias[i].observacion" [disabled]="saving()"></textarea>
+                </label>
               </div>
-
             }
-
           </div>
-
         }
-
       </section>
 
-      <!-- ========================================= -->
-      <!-- NOTAS                                     -->
-      <!-- ========================================= -->
-
-      <section class="card">
-
-        <div class="section-header">
-
-          <div>
-            <h2>Notas</h2>
-
-            <p>
-              Agrega información adicional
-              relacionada con la asistencia.
-            </p>
-          </div>
-
-        </div>
-
-        <div class="field">
-
-          <label for="notas">
-            Observaciones generales
-          </label>
-
-          <textarea
-            id="notas"
-            name="notas"
-            rows="4"
-            [(ngModel)]="notas"
-            [disabled]="saving()"
-            placeholder="Ingrese una observación general"
-          ></textarea>
-
-        </div>
-
+      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <h2 class="text-lg font-semibold text-slate-950">Notas</h2>
+        <label class="mt-4 block"><textarea class="w-full rounded-xl border border-slate-300 px-3 py-2.5" name="notas" rows="4" [(ngModel)]="notas" [disabled]="saving()" placeholder="Observaciones generales"></textarea></label>
       </section>
 
-      <!-- ========================================= -->
-      <!-- EVIDENCIAS EXISTENTES                     -->
-      <!-- ========================================= -->
+      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <div class="flex items-center justify-between gap-3"><div><h2 class="text-lg font-semibold text-slate-950">Evidencias actuales</h2><p class="mt-1 text-sm text-slate-500">Conserva o elimina fotografías existentes.</p></div><span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{{ evidencias().length }} foto(s)</span></div>
 
-      <section class="card">
-
-        <div class="section-header">
-
-          <div>
-
-            <h2>
-              Evidencias fotográficas
-            </h2>
-
-            <p>
-              Puedes conservar, eliminar o
-              agregar nuevas fotografías.
-            </p>
-
-          </div>
-
-          <div class="section-count">
-
-            {{ evidencias().length }}
-            foto(s)
-
-          </div>
-
-        </div>
-
-        @if (evidencias().length === 0) {
-
-          <div class="empty-state">
-
-            Este registro no tiene fotografías.
-
-          </div>
-
+        @if (!evidencias().length) {
+          <div class="mt-5 rounded-2xl bg-slate-50 p-5 text-sm text-slate-500">Este registro no tiene fotografías.</div>
         } @else {
-
-          <div class="evidence-grid">
-
-            @for (
-              evidencia of evidencias();
-              track evidencia.id
-            ) {
-
-              <div class="evidence-card">
-
-                <a
-                  [href]="evidencia.urlArchivo"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="evidence-image-link"
-                >
-
-                  <img
-                    [src]="evidencia.urlArchivo"
-                    alt="Evidencia de asistencia"
-                    class="evidence-image"
-                  />
-
-                </a>
-
-                <div class="evidence-actions">
-
-                  <a
-                    [href]="evidencia.urlArchivo"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="btn btn-light btn-small"
-                  >
-                    Ver
-                  </a>
-
-                  <button
-                    type="button"
-                    class="btn btn-danger btn-small"
-                    (click)="eliminarEvidencia(evidencia)"
-                    [disabled]="saving()"
-                  >
-                    Eliminar
-                  </button>
-
-                </div>
-
-              </div>
-
+          <div class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            @for (evidencia of evidencias(); track evidencia.id) {
+              <article class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                <a [href]="evidencia.urlArchivo" target="_blank" rel="noopener noreferrer"><img class="aspect-[10/7] w-full object-cover" [src]="evidencia.urlArchivo" alt="Evidencia de asistencia"></a>
+                <div class="flex items-center justify-between gap-3 p-4"><div><p class="text-sm font-semibold text-slate-900">{{ nombreTipoEvidencia(evidencia.tipo) }}</p><p class="text-xs text-slate-500">Evidencia guardada</p></div><button type="button" class="rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600" (click)="eliminarEvidencia(evidencia)" [disabled]="saving()">Eliminar</button></div>
+              </article>
             }
-
           </div>
-
         }
-
       </section>
 
-      <!-- ========================================= -->
-      <!-- NUEVAS EVIDENCIAS                         -->
-      <!-- ========================================= -->
+      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <h2 class="text-lg font-semibold text-slate-950">Cambiar o agregar fotografías</h2>
+        <p class="mt-1 text-sm text-slate-500">Cada nueva fotografía pasa por el editor antes de subirse.</p>
 
-      <section class="card">
-
-        <div class="section-header">
-
-          <div>
-
-            <h2>
-              Agregar fotografías
-            </h2>
-
-            <p>
-              Las fotografías nuevas se subirán
-              al guardar los cambios.
-            </p>
-
-          </div>
-
-        </div>
-
-        <div class="upload-area">
-
-          <label
-            class="upload-button"
-            for="nuevas-evidencias"
-          >
-            Seleccionar fotografías
-          </label>
-
-          <input
-            id="nuevas-evidencias"
-            type="file"
-            accept="image/*"
-            multiple
-            (change)="seleccionarArchivos($event)"
-            [disabled]="saving()"
-            hidden
-          />
-
-        </div>
-
-        @if (archivosNuevos.length > 0) {
-
-          <div class="new-files">
-
-            @for (
-              archivo of archivosNuevos;
-              track $index;
-              let i = $index
-            ) {
-
-              <div class="new-file">
-
-                <div class="new-file-info">
-
-                  <span class="file-name">
-                    {{ archivo.name }}
-                  </span>
-
-                  <span class="file-size">
-                    {{
-                      archivo.size / 1024 / 1024
-                      | number:'1.1-2'
-                    }}
-                    MB
-                  </span>
-
-                </div>
-
-                <button
-                  type="button"
-                  class="btn btn-danger btn-small"
-                  (click)="quitarArchivoNuevo(i)"
-                  [disabled]="saving()"
-                >
-                  Quitar
-                </button>
-
-              </div>
-
-            }
-
-          </div>
-
-        }
-
-      </section>
-
-      <!-- ========================================= -->
-      <!-- ACCIONES                                  -->
-      <!-- ========================================= -->
-
-      <div class="form-actions">
-
-        <button
-          type="button"
-          class="btn btn-secondary"
-          (click)="volver()"
-          [disabled]="saving()"
-        >
-          Cancelar
-        </button>
-
-        <button
-          type="submit"
-          class="btn btn-primary"
-          [disabled]="
-            saving()
-            || uploading()
-            || loadingPersonal()
-          "
-        >
-
-          @if (uploading()) {
-
-            Subiendo fotografías...
-
-          } @else if (saving()) {
-
-            Guardando...
-
-          } @else {
-
-            Guardar cambios
-
+        <div class="mt-5 grid gap-4 lg:grid-cols-3">
+          @for (item of [
+            { tipo: 'CALENTAMIENTO', titulo: 'Calentamiento' },
+            { tipo: 'INICIO_TURNO', titulo: 'Inicio de turno' },
+            { tipo: 'TAPONES_AUDITIVOS', titulo: 'Tapones auditivos' }
+          ]; track item.tipo) {
+            <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <h3 class="text-sm font-semibold text-slate-950">{{ item.titulo }}</h3>
+              @if (archivoNuevoPorTipo($any(item.tipo)); as pendiente) {
+                <p class="mt-1 truncate text-xs text-slate-500">{{ pendiente.archivo.name }} · {{ pendiente.archivo.size / 1024 / 1024 | number:'1.1-2' }} MB</p>
+                <div class="mt-4 flex gap-2"><label class="cursor-pointer rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white">Cambiar<input class="hidden" type="file" accept="image/jpeg,image/png,image/webp" (change)="seleccionarArchivos($any(item.tipo), $event)"></label><button type="button" class="rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600" (click)="quitarArchivoNuevoPorTipo($any(item.tipo))">Quitar</button></div>
+              } @else {
+                <p class="mt-1 text-xs text-slate-500">Sin nueva fotografía seleccionada</p>
+                <label class="mt-4 inline-flex cursor-pointer rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white">Seleccionar<input class="hidden" type="file" accept="image/jpeg,image/png,image/webp" (change)="seleccionarArchivos($any(item.tipo), $event)"></label>
+              }
+            </article>
           }
+        </div>
+      </section>
 
-        </button>
-
+      <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <button type="button" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700" (click)="volver()" [disabled]="saving()">Cancelar</button>
+        <button type="submit" class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50" [disabled]="saving() || uploading() || loadingPersonal()">@if (uploading()) { Subiendo fotografías... } @else if (saving()) { Guardando... } @else { Guardar cambios }</button>
       </div>
-
     </form>
-
   }
 
+  <app-image-cropper-modal
+    [visible]="cropperVisible()"
+    [imageFile]="cropperFile()"
+    titulo="Ajustar fotografía para el reporte"
+    (cancelar)="onCropperCancel()"
+    (confirmar)="onCropperConfirm($event)">
+  </app-image-cropper-modal>
 </div>
