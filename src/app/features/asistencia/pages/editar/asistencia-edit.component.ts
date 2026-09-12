@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 
 import {
   AsistenciaResponse,
@@ -67,6 +68,11 @@ export class AsistenciaEditComponent implements OnInit {
   readonly cropperVisible = signal(false);
   readonly cropperFile = signal<File | null>(null);
   readonly cropperTipo = signal<EvidenciaTipo | null>(null);
+  readonly evidenciaPegadoActiva = signal<EvidenciaTipo | null>(null);
+
+  readonly confirmGuardarVisible = signal(false);
+  readonly successModalVisible = signal(false);
+  readonly evidenciaEliminarPendiente = signal<EvidenciaResponse | null>(null);
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -77,6 +83,18 @@ export class AsistenciaEditComponent implements OnInit {
 
     this.asistenciaId = id;
     this.cargarDatos(id);
+  }
+
+  @HostListener('document:paste', ['$event'])
+  onDocumentPaste(event: ClipboardEvent): void {
+    const tipo = this.evidenciaPegadoActiva();
+    if (!tipo || this.cropperVisible() || this.confirmGuardarVisible() || this.successModalVisible()) return;
+    this.procesarPegado(tipo, event);
+  }
+
+  activarPegado(tipo: EvidenciaTipo): void {
+    this.evidenciaPegadoActiva.set(tipo);
+    this.error.set('');
   }
 
   cargarDatos(id: number): void {
@@ -206,6 +224,34 @@ export class AsistenciaEditComponent implements OnInit {
     if (!archivo) return;
 
     input.value = '';
+    this.activarPegado(tipo);
+    this.abrirEditorImagen(tipo, archivo);
+  }
+
+  private procesarPegado(tipo: EvidenciaTipo, event: ClipboardEvent): void {
+    const items = event.clipboardData?.items;
+    if (!items) {
+      this.error.set('No se pudo acceder al portapapeles.');
+      return;
+    }
+
+    const imageItem = Array.from(items).find(item => item.type.startsWith('image/'));
+    if (!imageItem) return;
+
+    const clipboardFile = imageItem.getAsFile();
+    if (!clipboardFile) {
+      this.error.set('No se pudo leer la imagen copiada.');
+      return;
+    }
+
+    event.preventDefault();
+    const extension = this.extensionFromMime(clipboardFile.type);
+    const archivo = new File(
+      [clipboardFile],
+      `DSS_${tipo}_${Date.now()}.${extension}`,
+      { type: clipboardFile.type || 'image/png', lastModified: Date.now() }
+    );
+
     this.abrirEditorImagen(tipo, archivo);
   }
 
@@ -222,6 +268,7 @@ export class AsistenciaEditComponent implements OnInit {
     }
 
     this.error.set('');
+    this.evidenciaPegadoActiva.set(tipo);
     this.cropperTipo.set(tipo);
     this.cropperFile.set(archivo);
     this.cropperVisible.set(true);
@@ -252,6 +299,10 @@ export class AsistenciaEditComponent implements OnInit {
     return this.archivosNuevos.find(item => item.tipo === tipo);
   }
 
+  evidenciaExistentePorTipo(tipo: EvidenciaTipo): EvidenciaResponse | undefined {
+    return this.evidencias().find(item => item.tipo === tipo);
+  }
+
   quitarArchivoNuevoPorTipo(tipo: EvidenciaTipo): void {
     this.archivosNuevos = this.archivosNuevos.filter(item => item.tipo !== tipo);
   }
@@ -265,16 +316,26 @@ export class AsistenciaEditComponent implements OnInit {
     }
   }
 
-  eliminarEvidencia(evidencia: EvidenciaResponse): void {
-    if (!this.asistenciaId || !window.confirm('¿Deseas eliminar esta fotografía?')) return;
+  solicitarEliminarEvidencia(evidencia: EvidenciaResponse): void {
+    this.evidenciaEliminarPendiente.set(evidencia);
+  }
 
+  cancelarEliminarEvidencia(): void {
+    this.evidenciaEliminarPendiente.set(null);
+  }
+
+  confirmarEliminarEvidencia(): void {
+    const evidencia = this.evidenciaEliminarPendiente();
+    if (!this.asistenciaId || !evidencia) return;
+
+    this.evidenciaEliminarPendiente.set(null);
     this.error.set('');
     this.success.set('');
 
     this.api.eliminarEvidencia(this.asistenciaId, evidencia.id).subscribe({
       next: () => {
         this.evidencias.update(items => items.filter(item => item.id !== evidencia.id));
-        this.success.set('Fotografía eliminada correctamente.');
+        this.success.set(`${this.nombreTipoEvidencia(evidencia.tipo)} eliminada correctamente.`);
       },
       error: err => this.error.set(this.errorMessage(err))
     });
@@ -303,6 +364,24 @@ export class AsistenciaEditComponent implements OnInit {
 
   guardar(): void {
     if (!this.asistenciaId || !this.validarFormulario()) return;
+    this.confirmGuardarVisible.set(true);
+  }
+
+  cancelarConfirmacionGuardar(): void {
+    this.confirmGuardarVisible.set(false);
+  }
+
+  confirmarGuardar(): void {
+    this.confirmGuardarVisible.set(false);
+    this.ejecutarGuardado();
+  }
+
+  cerrarSuccessModal(): void {
+    this.successModalVisible.set(false);
+  }
+
+  private ejecutarGuardado(): void {
+    if (!this.asistenciaId) return;
 
     this.saving.set(true);
     this.error.set('');
@@ -326,7 +405,7 @@ export class AsistenciaEditComponent implements OnInit {
     };
 
     this.api.actualizarAsistencia(this.asistenciaId, request).subscribe({
-      next: () => this.archivosNuevos.length ? this.subirNuevasEvidencias() : this.finalizarGuardado(),
+      next: () => this.archivosNuevos.length ? this.reemplazarEvidencias() : this.finalizarGuardado(),
       error: err => {
         this.error.set(this.errorMessage(err));
         this.saving.set(false);
@@ -334,26 +413,45 @@ export class AsistenciaEditComponent implements OnInit {
     });
   }
 
-  private subirNuevasEvidencias(): void {
+  private reemplazarEvidencias(): void {
     if (!this.asistenciaId || !this.archivosNuevos.length) {
       this.finalizarGuardado();
       return;
     }
 
     this.uploading.set(true);
-    const peticiones = this.archivosNuevos.map(item =>
-      this.api.subirEvidencia(this.asistenciaId!, item.archivo, item.tipo)
-    );
+    const pendientes = [...this.archivosNuevos];
 
-    forkJoin(peticiones).subscribe({
-      next: evidencias => {
-        this.evidencias.update(actuales => [...actuales, ...evidencias]);
+    const operaciones = pendientes.map(item => {
+      const anteriores = this.evidencias().filter(evidencia => evidencia.tipo === item.tipo);
+
+      return this.api.subirEvidencia(this.asistenciaId!, item.archivo, item.tipo).pipe(
+        switchMap(nueva => {
+          if (!anteriores.length) return of(nueva);
+
+          return forkJoin(
+            anteriores.map(anterior =>
+              this.api.eliminarEvidencia(this.asistenciaId!, anterior.id)
+            )
+          ).pipe(map(() => nueva));
+        })
+      );
+    });
+
+    forkJoin(operaciones).subscribe({
+      next: nuevas => {
+        const tiposReemplazados = new Set(pendientes.map(item => item.tipo));
+        this.evidencias.update(actuales => [
+          ...actuales.filter(item => !tiposReemplazados.has(item.tipo as EvidenciaTipo)),
+          ...nuevas
+        ]);
         this.archivosNuevos = [];
         this.uploading.set(false);
+        this.evidenciaPegadoActiva.set(null);
         this.finalizarGuardado();
       },
       error: err => {
-        this.error.set('Los datos fueron actualizados, pero ocurrió un error al subir una o más fotografías. ' + this.errorMessage(err));
+        this.error.set('Los datos fueron actualizados, pero ocurrió un error al reemplazar una o más fotografías. ' + this.errorMessage(err));
         this.uploading.set(false);
         this.saving.set(false);
       }
@@ -363,10 +461,20 @@ export class AsistenciaEditComponent implements OnInit {
   private finalizarGuardado(): void {
     this.saving.set(false);
     this.success.set('Asistencia actualizada correctamente.');
+    this.successModalVisible.set(true);
   }
 
   volver(): void {
     this.router.navigate(['/asistencia/historial']);
+  }
+
+  private extensionFromMime(mime: string): string {
+    switch (mime) {
+      case 'image/jpeg': return 'jpg';
+      case 'image/webp': return 'webp';
+      case 'image/png':
+      default: return 'png';
+    }
   }
 
   private fail(message: string): false {
