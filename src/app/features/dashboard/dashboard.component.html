@@ -1,66 +1,40 @@
-<div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-5 sm:px-6 lg:px-8">
-  <header class="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+<div class="mx-auto w-full max-w-[1500px] space-y-6 px-4 py-5 sm:px-6 lg:px-8">
+  <section class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
     <div>
-      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">Panel de asistencia</p>
-      <h1 class="mt-2 text-2xl font-semibold text-slate-950 sm:text-3xl">Dashboard de asistencia</h1>
-      <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
-        Indicadores reales de {{ plazaSeleccionada() }} para {{ nombreMes() }} {{ anio() }}.
-      </p>
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">SIGO · Panel operativo</p>
+      <h1 class="mt-2 text-2xl font-bold text-slate-950 sm:text-3xl">Dashboard de asistencia</h1>
+      <p class="mt-2 text-sm text-slate-500">Analiza el comportamiento del personal por semana, mes o año.</p>
       @if (ultimaActualizacion()) {
-        <p class="mt-2 text-xs text-slate-400">Última actualización: {{ ultimaActualizacion() | date:'dd/MM/yyyy HH:mm' }}</p>
+        <p class="mt-2 text-xs text-slate-400">Actualizado: {{ ultimaActualizacion() | date:'dd/MM/yyyy HH:mm' }}</p>
       }
     </div>
-
-    <div class="flex flex-col gap-2 sm:flex-row">
-      <button
-        type="button"
-        class="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-        [disabled]="loading()"
-        (click)="actualizar()">
-        {{ loading() ? 'Actualizando...' : 'Actualizar datos' }}
-      </button>
-      <a routerLink="/asistencia/historial" class="inline-flex items-center justify-center rounded-2xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100">Ver historial</a>
-      <a routerLink="/asistencia/registrar" class="inline-flex items-center justify-center rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700">Registrar asistencia</a>
+    <div class="flex flex-wrap gap-2">
+      <button type="button" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50" (click)="actualizar()">Actualizar</button>
+      <a routerLink="/asistencia/historial" class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-800">Historial</a>
+      <a routerLink="/asistencia/registrar" class="rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800">Registrar asistencia</a>
     </div>
-  </header>
+  </section>
 
   <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-    <div class="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h2 class="text-lg font-semibold text-slate-950">Filtros</h2>
-        <p class="mt-1 text-sm text-slate-500">Los cambios actualizan los indicadores y las gráficas con información del backend.</p>
-      </div>
-      @if (plazaBloqueada()) {
-        <span class="w-fit rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">Plaza asignada a tu usuario</span>
-      }
-    </div>
-
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <label class="space-y-2 text-sm font-medium text-slate-700">Año
-        <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" [value]="anio()" (change)="onAnioChange($event)">
+        <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" [value]="anio()" (change)="onAnioChange($event)">
           @for (item of anios; track item) { <option [value]="item">{{ item }}</option> }
         </select>
       </label>
-
       <label class="space-y-2 text-sm font-medium text-slate-700">Mes
-        <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" [value]="mes()" (change)="onMesChange($event)">
+        <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" [value]="mes()" (change)="onMesChange($event)">
           @for (item of meses; track item.id) { <option [value]="item.id">{{ item.nombre }}</option> }
         </select>
       </label>
-
       <label class="space-y-2 text-sm font-medium text-slate-700">Plaza
-        <select
-          class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
-          [value]="plazaId() ?? ''"
-          [disabled]="plazaBloqueada()"
-          (change)="onPlazaChange($event)">
+        <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100" [value]="plazaId() ?? ''" [disabled]="plazaBloqueada()" (change)="onPlazaChange($event)">
           @if (!plazaBloqueada()) { <option value="">Todas las plazas</option> }
-          @for (plaza of plazas(); track plaza.id) { <option [value]="plaza.id">{{ plaza.codigo }}{{ plaza.descripcion ? ' - ' + plaza.descripcion : '' }}</option> }
+          @for (plaza of plazas(); track plaza.id) { <option [value]="plaza.id">{{ plaza.codigo }}</option> }
         </select>
       </label>
-
       <label class="space-y-2 text-sm font-medium text-slate-700">Turno
-        <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" [value]="turnoId() ?? ''" (change)="onTurnoChange($event)">
+        <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" [value]="turnoId() ?? ''" (change)="onTurnoChange($event)">
           <option value="">Todos los turnos</option>
           @for (turno of turnos(); track turno.id) { <option [value]="turno.id">Turno {{ turno.codigo }}</option> }
         </select>
@@ -69,157 +43,89 @@
   </section>
 
   @if (error()) {
-    <div class="flex flex-col gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between">
-      <span>{{ error() }}</span>
-      <button type="button" class="rounded-xl bg-red-600 px-3 py-2 text-xs font-semibold text-white" (click)="actualizar()">Reintentar</button>
-    </div>
+    <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ error() }}</div>
   }
 
   @if (loading()) {
-    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      @for (item of [1,2,3,4]; track item) { <div class="h-32 animate-pulse rounded-3xl bg-slate-200"></div> }
-    </div>
+    <div class="h-[480px] animate-pulse rounded-3xl bg-slate-200"></div>
   } @else {
-    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-        <p class="text-sm text-slate-500">Registros de asistencia</p>
-        <strong class="mt-2 block text-3xl text-slate-950">{{ totalRegistros() }}</strong>
-        <span class="mt-2 block text-xs text-slate-400">{{ nombreMes() }} {{ anio() }}</span>
-      </article>
-
-      <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-        <p class="text-sm text-slate-500">Asistencia promedio</p>
-        <div class="mt-2 flex items-end gap-3">
-          <strong class="block text-3xl text-blue-700">{{ asistenciaPromedio() | number:'1.0-1' }}%</strong>
-          @if (tendenciaMensual(); as tendencia) {
-            <span
-              class="mb-1 rounded-full px-2 py-1 text-xs font-semibold"
-              [class.bg-emerald-50]="tendencia.subiendo"
-              [class.text-emerald-700]="tendencia.subiendo"
-              [class.bg-red-50]="!tendencia.subiendo"
-              [class.text-red-700]="!tendencia.subiendo">
-              {{ tendencia.subiendo ? '+' : '' }}{{ tendencia.delta | number:'1.0-1' }}%
-            </span>
-          }
+    <section class="analytics-card rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+      <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-slate-950">Asistencias del personal</h2>
+          <p class="mt-1 text-sm text-slate-500">{{ subtituloGrafica() }}</p>
         </div>
-        <span class="mt-2 block text-xs text-slate-400">Promedio ponderado · comparación mensual</span>
-      </article>
-
-      <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-        <p class="text-sm text-slate-500">Personal programado</p>
-        <strong class="mt-2 block text-3xl text-slate-950">{{ totalProgramados() }}</strong>
-        <span class="mt-2 block text-xs text-slate-400">Suma del periodo filtrado</span>
-      </article>
-
-      <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-        <p class="text-sm text-slate-500">Asistencias registradas</p>
-        <strong class="mt-2 block text-3xl text-emerald-700">{{ totalPresentes() }}</strong>
-        <span class="mt-2 block text-xs text-slate-400">Personal presente acumulado</span>
-      </article>
-
-      <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-        <p class="text-sm text-slate-500">Ausencias</p>
-        <strong class="mt-2 block text-3xl text-red-700">{{ totalAusencias() }}</strong>
-        <span class="mt-2 block text-xs text-slate-400">Según filtros aplicados</span>
-      </article>
-
-      <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-        <p class="text-sm text-slate-500">Registros al 100%</p>
-        <strong class="mt-2 block text-3xl text-slate-950">{{ registros100() }}</strong>
-        <span class="mt-2 block text-xs text-slate-400">Turnos sin ausencias</span>
-      </article>
-    </section>
-
-    @if (sinDatos()) {
-      <section class="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center shadow-sm">
-        <h2 class="text-lg font-semibold text-slate-900">No hay registros para estos filtros</h2>
-        <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">No se encontraron asistencias en {{ plazaSeleccionada() }} durante {{ nombreMes() }} de {{ anio() }}. Puedes cambiar los filtros o registrar una nueva asistencia.</p>
-        <div class="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
-          <a routerLink="/asistencia/historial" class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700">Ver historial</a>
-          <a routerLink="/asistencia/registrar" class="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white">Registrar asistencia</a>
-        </div>
-      </section>
-    }
-
-    <section class="grid gap-6 xl:grid-cols-2">
-      <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <h2 class="text-lg font-semibold text-slate-950">Asistencia mensual</h2>
-            <p class="mt-1 text-sm text-slate-500">Promedio por mes durante {{ anio() }}.</p>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div class="inline-flex rounded-xl bg-slate-100 p-1">
+            <button type="button" class="period-btn" [class.active]="periodoVista() === 'SEMANA'" (click)="setPeriodo('SEMANA')">Semana</button>
+            <button type="button" class="period-btn" [class.active]="periodoVista() === 'MES'" (click)="setPeriodo('MES')">Mes</button>
+            <button type="button" class="period-btn" [class.active]="periodoVista() === 'ANIO'" (click)="setPeriodo('ANIO')">Año</button>
           </div>
-          <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">Meta {{ meta }}%</span>
-        </div>
-
-        <div class="mt-5 overflow-x-auto"><svg class="min-w-[760px]" viewBox="0 0 1000 280" preserveAspectRatio="none">
-          @for (tick of yTicks; track tick) { <line x1="50" [attr.y1]="chartY(tick)" x2="980" [attr.y2]="chartY(tick)" stroke="#e2e8f0"/><text x="40" [attr.y]="chartY(tick)+4" text-anchor="end" font-size="12" fill="#64748b">{{ tick }}%</text> }
-          <line x1="50" [attr.y1]="chartY(meta)" x2="980" [attr.y2]="chartY(meta)" stroke="#f59e0b" stroke-dasharray="6 6"/>
-          @if (linePath(mensual())) { <path [attr.d]="linePath(mensual())" fill="none" stroke="#2563eb" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/> }
-          @for (point of mensual(); track $index; let i=$index) {
-            @if (point.value !== null) { <circle [attr.cx]="chartX(i,mensual().length)" [attr.cy]="chartY(point.value)" r="5" [attr.fill]="bajoMeta(point.value) ? '#dc2626' : '#2563eb'"><title>{{ point.label }}: {{ point.value }}%</title></circle> }
-            <text [attr.x]="chartX(i,mensual().length)" y="266" text-anchor="middle" font-size="12" fill="#64748b">{{ point.label }}</text>
+          @if (periodoVista() === 'SEMANA') {
+            <select class="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700" [value]="semana()" (change)="onSemanaChange($event)">
+              @for (item of semanas; track item) { <option [value]="item">Semana {{ item }}</option> }
+            </select>
           }
-        </svg></div>
-
-        @if (loadingMensual()) {
-          <p class="mt-3 text-sm text-slate-500">Cargando tendencia anual...</p>
-        } @else if (errorMensual()) {
-          <p class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{{ errorMensual() }}</p>
-        } @else if (!registrosAnioFiltrado().length) {
-          <p class="mt-3 text-sm text-slate-500">No hay registros del año para los filtros seleccionados.</p>
-        }
-      </article>
-
-      <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <h2 class="text-lg font-semibold text-slate-950">Asistencia diaria</h2>
-            <p class="mt-1 text-sm text-slate-500">Promedio por día de {{ nombreMes() }}.</p>
-          </div>
-          <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">Meta {{ meta }}%</span>
         </div>
+      </div>
 
-        <div class="mt-5 overflow-x-auto"><svg class="min-w-[760px]" viewBox="0 0 1000 280" preserveAspectRatio="none">
-          @for (tick of yTicks; track tick) { <line x1="50" [attr.y1]="chartY(tick)" x2="980" [attr.y2]="chartY(tick)" stroke="#e2e8f0"/><text x="40" [attr.y]="chartY(tick)+4" text-anchor="end" font-size="12" fill="#64748b">{{ tick }}%</text> }
-          <line x1="50" [attr.y1]="chartY(meta)" x2="980" [attr.y2]="chartY(meta)" stroke="#f59e0b" stroke-dasharray="6 6"/>
-          @if (linePath(diario())) { <path [attr.d]="linePath(diario())" fill="none" stroke="#0f766e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/> }
-          @for (point of diario(); track $index; let i=$index) {
-            @if (point.value !== null) { <circle [attr.cx]="chartX(i,diario().length)" [attr.cy]="chartY(point.value)" r="4" [attr.fill]="bajoMeta(point.value) ? '#dc2626' : '#0f766e'"><title>Día {{ point.label }}: {{ point.value }}%</title></circle> }
-            <text [attr.x]="chartX(i,diario().length)" y="266" text-anchor="middle" font-size="10" fill="#64748b">{{ point.label }}</text>
+      <div class="mt-5 flex flex-wrap items-end gap-x-10 gap-y-4 border-b border-slate-100 pb-5">
+        <div><div class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-emerald-700"></span><span class="text-sm text-slate-500">Presentes</span></div><strong class="mt-1 block text-2xl text-slate-950">{{ totalPresentes() }}</strong></div>
+        <div><div class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-emerald-300"></span><span class="text-sm text-slate-500">Programados</span></div><strong class="mt-1 block text-2xl text-slate-950">{{ totalProgramados() }}</strong></div>
+        <div class="ml-auto text-right"><span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Periodo</span><strong class="mt-1 block text-sm text-slate-700">{{ tituloPeriodo() }}</strong></div>
+      </div>
+
+      <div class="mt-6 overflow-x-auto">
+        <svg class="min-w-[900px]" viewBox="0 0 1000 290" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="presentesArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#15803d" stop-opacity="0.20"/><stop offset="100%" stop-color="#15803d" stop-opacity="0.02"/></linearGradient>
+            <linearGradient id="programadosArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#86efac" stop-opacity="0.22"/><stop offset="100%" stop-color="#86efac" stop-opacity="0.02"/></linearGradient>
+          </defs>
+          @for (tick of yTicks; track tick) {
+            <line x1="54" [attr.y1]="chartY(chartTickValue(tick))" x2="980" [attr.y2]="chartY(chartTickValue(tick))" stroke="#e2e8f0"/>
+            <text x="44" [attr.y]="chartY(chartTickValue(tick))+4" text-anchor="end" font-size="11" fill="#64748b">{{ chartTickValue(tick) }}</text>
           }
-        </svg></div>
-      </article>
+          @if (areaPath(chartPoints(), 'programados')) { <path [attr.d]="areaPath(chartPoints(), 'programados')" fill="url(#programadosArea)"/> }
+          @if (areaPath(chartPoints(), 'presentes')) { <path [attr.d]="areaPath(chartPoints(), 'presentes')" fill="url(#presentesArea)"/> }
+          @if (linePath(chartPoints(), 'programados')) { <path [attr.d]="linePath(chartPoints(), 'programados')" fill="none" stroke="#86efac" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/> }
+          @if (linePath(chartPoints(), 'presentes')) { <path [attr.d]="linePath(chartPoints(), 'presentes')" fill="none" stroke="#15803d" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/> }
+          @for (point of chartPoints(); track $index; let i=$index) {
+            @if (point.programados !== null) { <circle [attr.cx]="chartX(i, chartPoints().length)" [attr.cy]="chartY(point.programados)" r="4" fill="#86efac" stroke="white" stroke-width="2"><title>{{ point.label }} · Programados: {{ point.programados }}</title></circle> }
+            @if (point.presentes !== null) { <circle [attr.cx]="chartX(i, chartPoints().length)" [attr.cy]="chartY(point.presentes)" r="4.5" fill="#15803d" stroke="white" stroke-width="2"><title>{{ point.label }} · Presentes: {{ point.presentes }}</title></circle> }
+            <text [attr.x]="chartX(i, chartPoints().length)" y="272" text-anchor="middle" font-size="10" fill="#64748b">{{ point.label }}</text>
+          }
+        </svg>
+      </div>
+
+      @if (periodoVista() === 'ANIO' && loadingAnio()) { <p class="mt-3 text-sm text-slate-500">Cargando datos del año...</p> }
+      @if (periodoVista() === 'ANIO' && errorAnio()) { <p class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{{ errorAnio() }}</p> }
+
+      <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <article class="metric-card"><span class="metric-icon">P</span><div><strong>{{ totalPresentes() }}</strong><p>Presentes</p></div></article>
+        <article class="metric-card"><span class="metric-icon">A</span><div><strong>{{ totalAusencias() }}</strong><p>Ausencias</p></div></article>
+        <article class="metric-card"><span class="metric-icon">%</span><div><strong>{{ asistenciaPromedio() | number:'1.0-1' }}%</strong><p>Tasa de asistencia</p></div></article>
+        <article class="metric-card"><span class="metric-icon">D</span><div><strong>{{ diasPeriodo() }}</strong><p>{{ periodoVista() === 'ANIO' ? 'Meses del periodo' : 'Días del periodo' }}</p></div></article>
+      </div>
     </section>
 
     <section class="grid gap-6 xl:grid-cols-2">
       <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 class="text-lg font-semibold text-slate-950">Asistencia promedio por turno</h2>
-        <p class="mt-1 text-sm text-slate-500">Los porcentajes respetan los filtros activos.</p>
+        <h2 class="text-lg font-semibold text-slate-950">Asistencia por turno</h2>
         <div class="mt-5 space-y-4">
           @for (turno of resumenTurnos(); track turno.id) {
-            <div>
-              <div class="mb-2 flex items-center justify-between text-sm"><span class="font-medium text-slate-700">{{ turno.nombre }}</span><strong>{{ turno.porcentaje | number:'1.0-1' }}%</strong></div>
-              <div class="h-2.5 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full bg-blue-600 transition-all" [style.width.%]="turno.porcentaje"></div></div>
-            </div>
+            <div><div class="mb-2 flex justify-between text-sm"><span class="font-medium text-slate-700">{{ turno.nombre }}</span><strong>{{ turno.porcentaje | number:'1.0-1' }}%</strong></div><div class="h-2.5 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full bg-emerald-700" [style.width.%]="turno.porcentaje"></div></div></div>
           }
         </div>
       </article>
-
       <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <h2 class="text-lg font-semibold text-slate-950">Ausencias por motivo</h2>
-        <p class="mt-1 text-sm text-slate-500">Principales motivos registrados en el periodo.</p>
         @if (motivos().length) {
           <div class="mt-5 space-y-4">
             @for (motivo of motivos(); track motivo.motivo) {
-              <div>
-                <div class="mb-2 flex items-center justify-between text-sm"><span class="font-medium text-slate-700">{{ motivo.motivo }}</span><strong>{{ motivo.total }}</strong></div>
-                <div class="h-2.5 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full bg-amber-500 transition-all" [style.width.%]="motivoWidth(motivo.total)"></div></div>
-              </div>
+              <div><div class="mb-2 flex justify-between text-sm"><span class="font-medium text-slate-700">{{ motivo.motivo }}</span><strong>{{ motivo.total }}</strong></div><div class="h-2.5 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full bg-amber-500" [style.width.%]="motivoWidth(motivo.total)"></div></div></div>
             }
           </div>
-        } @else {
-          <div class="mt-5 rounded-2xl bg-slate-50 p-5 text-sm text-slate-500">No hay ausencias registradas con estos filtros.</div>
-        }
+        } @else { <p class="mt-5 rounded-2xl bg-slate-50 p-5 text-sm text-slate-500">No hay ausencias registradas en el periodo seleccionado.</p> }
       </article>
     </section>
   }
