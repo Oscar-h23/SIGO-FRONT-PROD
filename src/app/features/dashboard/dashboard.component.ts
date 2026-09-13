@@ -108,6 +108,13 @@ export class DashboardComponent implements OnInit {
   readonly totalPresentes = computed(() => this.sumar(this.registrosPeriodo(), 'presentes'));
   readonly totalAusencias = computed(() => this.sumar(this.registrosPeriodo(), 'ausentes'));
   readonly asistenciaPromedio = computed(() => this.weightedPercentage(this.registrosPeriodo()));
+  readonly asistenciaPromedioAnual = computed(() => this.weightedPercentage(this.registrosAnioFiltrado()));
+  readonly variacionVsAnual = computed(() => {
+    const actual = this.asistenciaPromedio();
+    const anual = this.asistenciaPromedioAnual();
+    if (!anual) return 0;
+    return Math.round((actual - anual) * 10) / 10;
+  });
 
   readonly diasPeriodo = computed(() => {
     if (this.periodoVista() === 'SEMANA') {
