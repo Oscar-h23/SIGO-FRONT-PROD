@@ -101,16 +101,20 @@
       <button class="menu" type="button" (click)="toggle()" [attr.aria-label]="collapsed() ? 'Expandir menú' : 'Contraer menú'">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z"/></svg>
       </button>
-      <div class="header-brand">
-        <img src="assets/sigo_logo.png" alt="" aria-hidden="true" />
-        <div>
-          <b>SIGO</b>
-          <small>{{auth.usuario()?.plaza || 'Gestión Operativa'}}</small>
-        </div>
-      </div>
-      <div class="user">
-        <b>{{auth.usuario()?.nombre}}</b>
+
+      <div class="user-identity">
+        <b>{{auth.usuario()?.nombre || 'Usuario'}}</b>
         <span>{{auth.usuario()?.rol}}</span>
+      </div>
+
+      <div class="plaza-card" aria-label="Plaza asignada">
+        <span class="plaza-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 4a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"/></svg>
+        </span>
+        <div>
+          <small>Plaza</small>
+          <strong>{{auth.usuario()?.plaza || 'Sin asignar'}}</strong>
+        </div>
       </div>
     </header>
 
