@@ -59,7 +59,10 @@ export class DashboardComponent implements OnInit {
 
   private readonly cacheMes = new Map<string, AsistenciaResponse[]>();
   private readonly cacheAnio = new Map<string, AsistenciaResponse[]>();
-  private readonly motivoColores = ['#2563eb', '#60a5fa', '#93c5fd', '#bfdbfe', '#1d4ed8', '#3b82f6'];
+  private readonly motivoColores = [
+    '#2563eb', '#7c3aed', '#06b6d4', '#f59e0b', '#ef4444', '#10b981',
+    '#ec4899', '#8b5cf6', '#14b8a6', '#f97316', '#84cc16', '#0ea5e9'
+  ];
 
   readonly meses = [
     { id: 1, nombre: 'Enero', corto: 'Ene' }, { id: 2, nombre: 'Febrero', corto: 'Feb' },
@@ -151,8 +154,7 @@ export class DashboardComponent implements OnInit {
 
     const items = [...mapa.entries()]
       .map(([motivo, total]) => ({ motivo, total }))
-      .sort((a, b) => b.total - a.total || a.motivo.localeCompare(b.motivo))
-      .slice(0, 6);
+      .sort((a, b) => b.total - a.total || a.motivo.localeCompare(b.motivo));
     const total = items.reduce((acc, item) => acc + item.total, 0);
     let offset = 0;
 
