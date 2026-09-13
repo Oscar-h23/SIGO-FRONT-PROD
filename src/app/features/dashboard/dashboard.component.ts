@@ -13,17 +13,16 @@ interface ChartPoint {
   label: string;
   presentes: number | null;
   programados: number | null;
+  ausentes: number;
+  porcentaje: number;
 }
 
-interface MotivoConteo {
+interface MotivoDetalle {
   motivo: string;
   total: number;
-}
-
-interface TurnoResumen {
-  id: number;
-  nombre: string;
   porcentaje: number;
+  offset: number;
+  color: string;
 }
 
 @Component({
@@ -55,9 +54,12 @@ export class DashboardComponent implements OnInit {
   readonly periodoVista = signal<PeriodoVista>('MES');
   readonly plazaId = signal<number | null>(null);
   readonly turnoId = signal<number | null>(null);
+  readonly turnoAnaliticaId = signal<number | null>(null);
+  readonly puntoHover = signal<number | null>(null);
 
   private readonly cacheMes = new Map<string, AsistenciaResponse[]>();
   private readonly cacheAnio = new Map<string, AsistenciaResponse[]>();
+  private readonly motivoColores = ['#2563eb', '#60a5fa', '#93c5fd', '#bfdbfe', '#1d4ed8', '#3b82f6'];
 
   readonly meses = [
     { id: 1, nombre: 'Enero', corto: 'Ene' }, { id: 2, nombre: 'Febrero', corto: 'Feb' },
@@ -103,6 +105,7 @@ export class DashboardComponent implements OnInit {
   readonly totalPresentes = computed(() => this.sumar(this.registrosPeriodo(), 'presentes'));
   readonly totalAusencias = computed(() => this.sumar(this.registrosPeriodo(), 'ausentes'));
   readonly asistenciaPromedio = computed(() => this.weightedPercentage(this.registrosPeriodo()));
+
   readonly diasPeriodo = computed(() => {
     if (this.periodoVista() === 'SEMANA') {
       const inicio = (this.semana() - 1) * 7 + 1;
@@ -138,37 +141,61 @@ export class DashboardComponent implements OnInit {
     return Math.ceil(max / 10) * 10;
   });
 
-  readonly motivos = computed<MotivoConteo[]>(() => {
+  readonly motivos = computed<MotivoDetalle[]>(() => {
     const mapa = new Map<string, number>();
     for (const registro of this.registrosPeriodo()) {
       for (const ausencia of registro.ausencias ?? []) {
         mapa.set(ausencia.motivo, (mapa.get(ausencia.motivo) ?? 0) + 1);
       }
     }
-    return [...mapa.entries()]
+
+    const items = [...mapa.entries()]
       .map(([motivo, total]) => ({ motivo, total }))
       .sort((a, b) => b.total - a.total || a.motivo.localeCompare(b.motivo))
       .slice(0, 6);
+    const total = items.reduce((acc, item) => acc + item.total, 0);
+    let offset = 0;
+
+    return items.map((item, index) => {
+      const porcentaje = total ? Math.round((item.total / total) * 1000) / 10 : 0;
+      const detalle: MotivoDetalle = {
+        ...item,
+        porcentaje,
+        offset,
+        color: this.motivoColores[index % this.motivoColores.length]
+      };
+      offset += porcentaje;
+      return detalle;
+    });
   });
 
-  readonly maxMotivos = computed(() => Math.max(...this.motivos().map(item => item.total), 1));
+  readonly totalMotivos = computed(() => this.motivos().reduce((acc, item) => acc + item.total, 0));
 
-  readonly resumenTurnos = computed<TurnoResumen[]>(() => {
-    const acumulado = new Map<number, { programados: number; presentes: number }>();
-    for (const registro of this.registrosPeriodo()) {
-      const actual = acumulado.get(registro.turnoId) ?? { programados: 0, presentes: 0 };
-      actual.programados += Number(registro.programados || 0);
-      actual.presentes += Number(registro.presentes || 0);
-      acumulado.set(registro.turnoId, actual);
-    }
-    return this.turnos().map(turno => {
-      const datos = acumulado.get(turno.id);
-      return {
-        id: turno.id,
-        nombre: `Turno ${turno.codigo}`,
-        porcentaje: datos?.programados ? Math.round((datos.presentes / datos.programados) * 1000) / 10 : 0
-      };
-    });
+  readonly turnoAnalitica = computed(() => {
+    const id = this.turnoAnaliticaId() ?? this.turnos()[0]?.id ?? null;
+    return this.turnos().find(t => t.id === id) ?? null;
+  });
+
+  readonly promedioTurnoAnual = computed(() => {
+    const id = this.turnoAnalitica()?.id;
+    if (!id) return 0;
+    return this.weightedPercentage(this.registrosAnio().filter(r => r.turnoId === id));
+  });
+
+  readonly promedioTurnoMes = computed(() => {
+    const id = this.turnoAnalitica()?.id;
+    if (!id) return 0;
+    return this.weightedPercentage(this.registrosMesActual().filter(r => r.turnoId === id));
+  });
+
+  readonly registrosTurnoAnual = computed(() => {
+    const id = this.turnoAnalitica()?.id;
+    return id ? this.registrosAnio().filter(r => r.turnoId === id).length : 0;
+  });
+
+  readonly registrosTurnoMes = computed(() => {
+    const id = this.turnoAnalitica()?.id;
+    return id ? this.registrosMesActual().filter(r => r.turnoId === id).length : 0;
   });
 
   ngOnInit(): void {
@@ -179,6 +206,15 @@ export class DashboardComponent implements OnInit {
 
   setPeriodo(periodo: PeriodoVista): void {
     this.periodoVista.set(periodo);
+    this.puntoHover.set(null);
+  }
+
+  setPuntoHover(index: number | null): void {
+    this.puntoHover.set(index);
+  }
+
+  onTurnoAnaliticaChange(event: Event): void {
+    this.turnoAnaliticaId.set(Number((event.target as HTMLSelectElement).value));
   }
 
   onAnioChange(event: Event): void {
@@ -229,6 +265,7 @@ export class DashboardComponent implements OnInit {
         const activas = plazas.filter(p => p.activo);
         this.plazas.set(this.plazaBloqueada() ? activas.filter(p => p.id === this.plazaId()) : activas);
         this.turnos.set(turnos);
+        if (!this.turnoAnaliticaId() && turnos.length) this.turnoAnaliticaId.set(turnos[0].id);
         this.registrosMesActual.set(registros);
         this.cacheMes.set(this.claveMes(), registros);
         this.ultimaActualizacion.set(new Date());
@@ -300,6 +337,12 @@ export class DashboardComponent implements OnInit {
     return Math.round(this.chartMax() * factor);
   }
 
+  tooltipX(index: number, total: number): number {
+    const x = this.chartX(index, total);
+    if (x > 790) return x - 168;
+    return x + 14;
+  }
+
   linePath(points: ChartPoint[], key: 'presentes' | 'programados'): string {
     const valid = points.map((p, i) => p[key] === null ? null : `${this.chartX(i, points.length)},${this.chartY(p[key]!)}`)
       .filter((p): p is string => p !== null);
@@ -314,39 +357,57 @@ export class DashboardComponent implements OnInit {
     return `M ${valid[0].x},${bottom} L ${valid.map(p => `${p.x},${p.y}`).join(' L ')} L ${valid[valid.length - 1].x},${bottom} Z`;
   }
 
-  motivoWidth(total: number): number {
-    return Math.max(4, (total / this.maxMotivos()) * 100);
+  gaugeDash(value: number): string {
+    return `${Math.max(0, Math.min(100, value))} 100`;
   }
 
   private puntosDias(inicio: number, fin: number): ChartPoint[] {
-    const mapa = new Map<number, { presentes: number; programados: number }>();
+    const mapa = new Map<number, { presentes: number; programados: number; ausentes: number }>();
     for (const r of this.registrosMes()) {
       const dia = Number(r.fecha.slice(8, 10));
       if (dia < inicio || dia > fin) continue;
-      const actual = mapa.get(dia) ?? { presentes: 0, programados: 0 };
+      const actual = mapa.get(dia) ?? { presentes: 0, programados: 0, ausentes: 0 };
       actual.presentes += Number(r.presentes || 0);
       actual.programados += Number(r.programados || 0);
+      actual.ausentes += Number(r.ausentes || 0);
       mapa.set(dia, actual);
     }
     return Array.from({ length: fin - inicio + 1 }, (_, i) => {
       const dia = inicio + i;
       const dato = mapa.get(dia);
-      return { label: String(dia), presentes: dato?.presentes ?? null, programados: dato?.programados ?? null };
+      const presentes = dato?.presentes ?? null;
+      const programados = dato?.programados ?? null;
+      return {
+        label: String(dia),
+        presentes,
+        programados,
+        ausentes: dato?.ausentes ?? 0,
+        porcentaje: programados ? Math.round(((presentes ?? 0) / programados) * 1000) / 10 : 0
+      };
     });
   }
 
   private puntosAnio(): ChartPoint[] {
-    const mapa = new Map<number, { presentes: number; programados: number }>();
+    const mapa = new Map<number, { presentes: number; programados: number; ausentes: number }>();
     for (const r of this.registrosAnioFiltrado()) {
       const mes = Number(r.fecha.slice(5, 7));
-      const actual = mapa.get(mes) ?? { presentes: 0, programados: 0 };
+      const actual = mapa.get(mes) ?? { presentes: 0, programados: 0, ausentes: 0 };
       actual.presentes += Number(r.presentes || 0);
       actual.programados += Number(r.programados || 0);
+      actual.ausentes += Number(r.ausentes || 0);
       mapa.set(mes, actual);
     }
     return this.meses.map(m => {
       const dato = mapa.get(m.id);
-      return { label: m.corto, presentes: dato?.presentes ?? null, programados: dato?.programados ?? null };
+      const presentes = dato?.presentes ?? null;
+      const programados = dato?.programados ?? null;
+      return {
+        label: m.corto,
+        presentes,
+        programados,
+        ausentes: dato?.ausentes ?? 0,
+        porcentaje: programados ? Math.round(((presentes ?? 0) / programados) * 1000) / 10 : 0
+      };
     });
   }
 
@@ -372,7 +433,10 @@ export class DashboardComponent implements OnInit {
   private mesRange(): { inicio: string; fin: string } {
     const ultimoDia = new Date(this.anio(), this.mes(), 0).getDate();
     const mm = String(this.mes()).padStart(2, '0');
-    return { inicio: `${this.anio()}-${mm}-01`, fin: `${this.anio()}-${mm}-${String(ultimoDia).padStart(2, '0')}` };
+    return {
+      inicio: `${this.anio()}-${mm}-01`,
+      fin: `${this.anio()}-${mm}-${String(ultimoDia).padStart(2, '0')}`
+    };
   }
 
   private claveMes(): string {
