@@ -28,6 +28,10 @@ export class RelevoApiService {
     return this.http.post<RelevoResponse>(`${this.api}/relevos`, request);
   }
 
+  actualizar(id: number, request: RelevoRequest): Observable<RelevoResponse> {
+    return this.http.put<RelevoResponse>(`${this.api}/relevos/${id}`, request);
+  }
+
   listar(inicio?: string, fin?: string): Observable<RelevoResponse[]> {
     let params = new HttpParams();
     if (inicio) params = params.set('inicio', inicio);
@@ -42,18 +46,20 @@ export class RelevoApiService {
   subirEvidenciaChecklist(checklistId: number, file: File): Observable<EvidenciaRelevoResponse> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<EvidenciaRelevoResponse>(
-      `${this.api}/relevos/checklist/${checklistId}/evidencias`,
-      formData
-    );
+    return this.http.post<EvidenciaRelevoResponse>(`${this.api}/relevos/checklist/${checklistId}/evidencias`, formData);
+  }
+
+  eliminarEvidenciaChecklist(checklistId: number, evidenciaId: number): Observable<void> {
+    return this.http.delete<void>(`${this.api}/relevos/checklist/${checklistId}/evidencias/${evidenciaId}`);
   }
 
   subirEvidenciaVia(relevoViaId: number, file: File): Observable<EvidenciaRelevoResponse> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<EvidenciaRelevoResponse>(
-      `${this.api}/relevos/vias/${relevoViaId}/evidencias`,
-      formData
-    );
+    return this.http.post<EvidenciaRelevoResponse>(`${this.api}/relevos/vias/${relevoViaId}/evidencias`, formData);
+  }
+
+  eliminarEvidenciaVia(relevoViaId: number, evidenciaId: number): Observable<void> {
+    return this.http.delete<void>(`${this.api}/relevos/vias/${relevoViaId}/evidencias/${evidenciaId}`);
   }
 }
