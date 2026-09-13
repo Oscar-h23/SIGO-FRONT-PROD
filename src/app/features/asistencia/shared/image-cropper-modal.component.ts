@@ -13,13 +13,13 @@ export class ImageCropperModalComponent implements OnChanges {
   @Input() visible = false;
   @Input() imageFile: File | null = null;
   @Input() titulo = 'Editar fotografía';
+  @Input() aspectRatio = 100 / 70;
+  @Input() aspectRatioLabel = '10:7';
+  @Input() outputWidth = 1200;
+  @Input() outputHeight = 840;
 
   @Output() cancelar = new EventEmitter<void>();
   @Output() confirmar = new EventEmitter<File>();
-
-  readonly aspectRatio = 100 / 70;
-  readonly outputWidth = 1200;
-  readonly outputHeight = 840;
 
   croppedBlob: Blob | null = null;
   previewUrl: string | null = null;
