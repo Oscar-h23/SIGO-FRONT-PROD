@@ -119,7 +119,18 @@
       <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <article class="metric-card"><span class="metric-icon">P</span><div><strong>{{ totalPresentes() }}</strong><p>Presentes</p></div></article>
         <article class="metric-card"><span class="metric-icon">A</span><div><strong>{{ totalAusencias() }}</strong><p>Ausencias</p></div></article>
-        <article class="metric-card"><span class="metric-icon">%</span><div><strong>{{ asistenciaPromedio() | number:'1.0-1' }}%</strong><p>Tasa de asistencia</p></div></article>
+        <article class="rate-card">
+          <div class="rate-card-header">
+            <p>Tasa de asistencia</p>
+            <span class="rate-symbol">%</span>
+          </div>
+          <div class="rate-comparison" [class.positive]="variacionVsAnual() >= 0" [class.negative]="variacionVsAnual() < 0">
+            <strong>{{ variacionVsAnual() >= 0 ? '↑' : '↓' }} {{ variacionVsAnual() >= 0 ? '+' : '' }}{{ variacionVsAnual() | number:'1.0-1' }} pp</strong>
+            <span>vs promedio anual</span>
+          </div>
+          <div class="rate-card-value">{{ asistenciaPromedio() | number:'1.0-1' }}%</div>
+          <p class="rate-card-base">Promedio anual: {{ asistenciaPromedioAnual() | number:'1.0-1' }}%</p>
+        </article>
         <article class="metric-card"><span class="metric-icon">D</span><div><strong>{{ diasPeriodo() }}</strong><p>{{ periodoVista() === 'ANIO' ? 'Meses del periodo' : 'Días del periodo' }}</p></div></article>
       </div>
     </section>
