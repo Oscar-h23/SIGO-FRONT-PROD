@@ -179,7 +179,7 @@ export class RelevoNuevoComponent implements OnInit, OnDestroy {
       vias: this.relevoApi.getVias(usuario.plazaId)
     }).subscribe({
       next: ({ turnos, elementos, vias }) => {
-        this.turnos = (turnos ?? []).filter(item => item.activo !== false);
+        this.turnos = turnos ?? [];
         this.elementos = [...(elementos ?? [])]
           .filter(item => item.activo !== false)
           .sort((a, b) => a.categoria === b.categoria
