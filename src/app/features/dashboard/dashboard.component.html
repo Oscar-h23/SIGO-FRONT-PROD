@@ -97,10 +97,10 @@
             <text [attr.x]="chartX(i, chartPoints().length)" y="274" text-anchor="middle" font-size="10" fill="#64748b">{{ point.label }}</text>
           }
 
-          @if (puntoHover() !== null; as hoverIndex) {
-            @if (chartPoints()[hoverIndex]; as point) {
-              <line [attr.x1]="chartX(hoverIndex, chartPoints().length)" y1="18" [attr.x2]="chartX(hoverIndex, chartPoints().length)" y2="238" stroke="#94a3b8" stroke-dasharray="4 4"/>
-              <g class="chart-tooltip" [attr.transform]="'translate(' + tooltipX(hoverIndex, chartPoints().length) + ',38)'">
+          @if (puntoHover() !== null) {
+            @if (chartPoints()[puntoHover() ?? 0]; as point) {
+              <line [attr.x1]="chartX(puntoHover() ?? 0, chartPoints().length)" y1="18" [attr.x2]="chartX(puntoHover() ?? 0, chartPoints().length)" y2="238" stroke="#94a3b8" stroke-dasharray="4 4"/>
+              <g class="chart-tooltip" [attr.transform]="'translate(' + tooltipX(puntoHover() ?? 0, chartPoints().length) + ',38)'">
                 <rect width="154" height="112" rx="10" fill="white" stroke="#dbe3ef"/>
                 <text x="12" y="20" font-size="11" font-weight="700" fill="#0f172a">{{ point.label }}</text>
                 <circle cx="14" cy="40" r="4" fill="#2563eb"/><text x="25" y="44" font-size="10" fill="#334155">Presentes: {{ point.presentes ?? 0 }}</text>
