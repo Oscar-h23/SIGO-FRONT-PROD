@@ -1,1 +1,120 @@
-<section class="page"><div class="page-head"><div><span>RELEVOS</span><h1>Historial</h1></div></div><div class="card table-wrap">@if(error){<p class="notice">{{error}}</p>}<table><thead><tr><th>Fecha</th><th>Plaza</th><th>Turno</th><th></th></tr></thead><tbody>@for(x of items;track x.id){<tr><td>{{x.fecha}}</td><td>{{x.plazaCodigo}}</td><td>{{x.turnoCodigo}}</td><td><a [routerLink]="['/relevos',x.id]">Ver detalle</a></td></tr>}@empty{<tr><td colspan="4">Sin registros.</td></tr>}</tbody></table></div></section>
+<div class="mx-auto w-full max-w-[1500px] space-y-6 px-4 py-5 sm:px-6 lg:px-8">
+  <section class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">SIGO · Relevos</p>
+      <h1 class="mt-2 text-2xl font-bold text-slate-950 sm:text-3xl">Historial de relevos</h1>
+      <p class="mt-2 text-sm text-slate-500">
+        @if (esOperador) {
+          Solo se muestran los relevos de hoy correspondientes a tu plaza.
+        } @else {
+          Consulta los relevos registrados por rango de fechas y plaza.
+        }
+      </p>
+    </div>
+
+    <a routerLink="/relevos/nuevo" class="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
+      Nuevo relevo
+    </a>
+  </section>
+
+  @if (esOperador) {
+    <section class="grid gap-3 sm:grid-cols-3">
+      <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Fecha</p>
+        <strong class="mt-2 block text-base text-slate-900">{{ inicio }}</strong>
+      </article>
+      <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Plaza</p>
+        <strong class="mt-2 block text-base text-slate-900">{{ auth.usuario()?.plaza || 'Sin plaza' }}</strong>
+      </article>
+      <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Acceso</p>
+        <strong class="mt-2 block text-base text-slate-900">Solo hoy</strong>
+      </article>
+    </section>
+  } @else {
+    <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1.2fr_auto] xl:items-end">
+        <label class="space-y-2 text-sm font-medium text-slate-700">
+          Desde
+          <input type="date" [(ngModel)]="inicio" name="inicio" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+        </label>
+
+        <label class="space-y-2 text-sm font-medium text-slate-700">
+          Hasta
+          <input type="date" [(ngModel)]="fin" name="fin" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+        </label>
+
+        <label class="space-y-2 text-sm font-medium text-slate-700">
+          Plaza
+          <select [(ngModel)]="plazaId" name="plazaId" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+            <option [ngValue]="null">Todas las plazas</option>
+            @for (plaza of plazas; track plaza.id) {
+              <option [ngValue]="plaza.id">{{ plaza.codigo }}{{ plaza.descripcion ? ' - ' + plaza.descripcion : '' }}</option>
+            }
+          </select>
+        </label>
+
+        <div class="flex gap-2">
+          <button type="button" (click)="buscar()" [disabled]="cargando()" class="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60">Buscar</button>
+          <button type="button" (click)="limpiarFiltros()" [disabled]="cargando()" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">Limpiar</button>
+        </div>
+      </div>
+    </section>
+  }
+
+  @if (error()) {
+    <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ error() }}</div>
+  }
+
+  @if (cargando()) {
+    <div class="space-y-3">
+      <div class="h-32 animate-pulse rounded-3xl bg-slate-200"></div>
+      <div class="h-32 animate-pulse rounded-3xl bg-slate-200"></div>
+    </div>
+  } @else {
+    <section class="space-y-4">
+      <div class="flex items-center justify-between gap-3">
+        <strong class="text-sm text-slate-700">{{ relevos.length }} relevo(s)</strong>
+      </div>
+
+      @if (!relevos.length) {
+        <div class="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-500">
+          No se encontraron relevos para los criterios seleccionados.
+        </div>
+      } @else {
+        <div class="grid gap-4">
+          @for (relevo of relevos; track relevo.id) {
+            <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-200 hover:shadow-md sm:p-6">
+              <div class="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-3">
+                    <span class="rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">#{{ relevo.id }}</span>
+                    <strong class="text-lg text-slate-950">{{ relevo.plazaCodigo }}{{ relevo.plazaDescripcion ? ' - ' + relevo.plazaDescripcion : '' }}</strong>
+                  </div>
+
+                  <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div><p class="text-xs text-slate-400">Fecha</p><strong class="mt-1 block text-sm text-slate-800">{{ relevo.fecha }}</strong></div>
+                    <div><p class="text-xs text-slate-400">Hora</p><strong class="mt-1 block text-sm text-slate-800">{{ horaCorta(relevo.hora) }}</strong></div>
+                    <div><p class="text-xs text-slate-400">Turno</p><strong class="mt-1 block text-sm text-slate-800">{{ relevo.turnoCodigo }}</strong></div>
+                    <div><p class="text-xs text-slate-400">Registrado por</p><strong class="mt-1 block text-sm text-slate-800">{{ relevo.operadorNombre }}</strong></div>
+                  </div>
+
+                  <div class="mt-4 flex flex-wrap gap-2">
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{{ totalVias(relevo) }} vías</span>
+                    <span class="rounded-full px-3 py-1 text-xs font-semibold" [class.bg-amber-50]="viasConObservacion(relevo) > 0" [class.text-amber-700]="viasConObservacion(relevo) > 0" [class.bg-emerald-50]="viasConObservacion(relevo) === 0" [class.text-emerald-700]="viasConObservacion(relevo) === 0">{{ viasConObservacion(relevo) }} vía(s) observada(s)</span>
+                    <span class="rounded-full px-3 py-1 text-xs font-semibold" [class.bg-amber-50]="checklistConObservacion(relevo) > 0" [class.text-amber-700]="checklistConObservacion(relevo) > 0" [class.bg-emerald-50]="checklistConObservacion(relevo) === 0" [class.text-emerald-700]="checklistConObservacion(relevo) === 0">{{ checklistConObservacion(relevo) }} ítem(s) observado(s)</span>
+                  </div>
+                </div>
+
+                <a [routerLink]="['/relevos', relevo.id]" class="inline-flex shrink-0 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-100">
+                  Ver detalle
+                </a>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>
