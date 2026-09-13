@@ -1,7 +1,7 @@
 <div class="mx-auto w-full max-w-[1500px] space-y-6 px-4 py-5 sm:px-6 lg:px-8">
   <section class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
     <div>
-      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">SIGO · Panel operativo</p>
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">SIGO · Panel operativo</p>
       <h1 class="mt-2 text-2xl font-bold text-slate-950 sm:text-3xl">Dashboard de asistencia</h1>
       <p class="mt-2 text-sm text-slate-500">Analiza el comportamiento del personal por semana, mes o año.</p>
       @if (ultimaActualizacion()) {
@@ -10,31 +10,31 @@
     </div>
     <div class="flex flex-wrap gap-2">
       <button type="button" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50" (click)="actualizar()">Actualizar</button>
-      <a routerLink="/asistencia/historial" class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-800">Historial</a>
-      <a routerLink="/asistencia/registrar" class="rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800">Registrar asistencia</a>
+      <a routerLink="/asistencia/historial" class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-800">Historial</a>
+      <a routerLink="/asistencia/registrar" class="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Registrar asistencia</a>
     </div>
   </section>
 
   <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <label class="space-y-2 text-sm font-medium text-slate-700">Año
-        <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" [value]="anio()" (change)="onAnioChange($event)">
+        <select class="filter-select" [value]="anio()" (change)="onAnioChange($event)">
           @for (item of anios; track item) { <option [value]="item">{{ item }}</option> }
         </select>
       </label>
       <label class="space-y-2 text-sm font-medium text-slate-700">Mes
-        <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" [value]="mes()" (change)="onMesChange($event)">
+        <select class="filter-select" [value]="mes()" (change)="onMesChange($event)">
           @for (item of meses; track item.id) { <option [value]="item.id">{{ item.nombre }}</option> }
         </select>
       </label>
       <label class="space-y-2 text-sm font-medium text-slate-700">Plaza
-        <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100" [value]="plazaId() ?? ''" [disabled]="plazaBloqueada()" (change)="onPlazaChange($event)">
+        <select class="filter-select disabled:bg-slate-100" [value]="plazaId() ?? ''" [disabled]="plazaBloqueada()" (change)="onPlazaChange($event)">
           @if (!plazaBloqueada()) { <option value="">Todas las plazas</option> }
           @for (plaza of plazas(); track plaza.id) { <option [value]="plaza.id">{{ plaza.codigo }}</option> }
         </select>
       </label>
       <label class="space-y-2 text-sm font-medium text-slate-700">Turno
-        <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" [value]="turnoId() ?? ''" (change)="onTurnoChange($event)">
+        <select class="filter-select" [value]="turnoId() ?? ''" (change)="onTurnoChange($event)">
           <option value="">Todos los turnos</option>
           @for (turno of turnos(); track turno.id) { <option [value]="turno.id">Turno {{ turno.codigo }}</option> }
         </select>
@@ -70,16 +70,16 @@
       </div>
 
       <div class="mt-5 flex flex-wrap items-end gap-x-10 gap-y-4 border-b border-slate-100 pb-5">
-        <div><div class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-emerald-700"></span><span class="text-sm text-slate-500">Presentes</span></div><strong class="mt-1 block text-2xl text-slate-950">{{ totalPresentes() }}</strong></div>
-        <div><div class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-emerald-300"></span><span class="text-sm text-slate-500">Programados</span></div><strong class="mt-1 block text-2xl text-slate-950">{{ totalProgramados() }}</strong></div>
+        <div><div class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-blue-600"></span><span class="text-sm text-slate-500">Presentes</span></div><strong class="mt-1 block text-2xl text-slate-950">{{ totalPresentes() }}</strong></div>
+        <div><div class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-blue-300"></span><span class="text-sm text-slate-500">Programados</span></div><strong class="mt-1 block text-2xl text-slate-950">{{ totalProgramados() }}</strong></div>
         <div class="ml-auto text-right"><span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Periodo</span><strong class="mt-1 block text-sm text-slate-700">{{ tituloPeriodo() }}</strong></div>
       </div>
 
       <div class="mt-6 overflow-x-auto">
-        <svg class="min-w-[900px]" viewBox="0 0 1000 290" preserveAspectRatio="none">
+        <svg class="min-w-[900px]" viewBox="0 0 1000 300" preserveAspectRatio="none" (mouseleave)="setPuntoHover(null)">
           <defs>
-            <linearGradient id="presentesArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#15803d" stop-opacity="0.20"/><stop offset="100%" stop-color="#15803d" stop-opacity="0.02"/></linearGradient>
-            <linearGradient id="programadosArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#86efac" stop-opacity="0.22"/><stop offset="100%" stop-color="#86efac" stop-opacity="0.02"/></linearGradient>
+            <linearGradient id="presentesArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563eb" stop-opacity="0.20"/><stop offset="100%" stop-color="#2563eb" stop-opacity="0.02"/></linearGradient>
+            <linearGradient id="programadosArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#93c5fd" stop-opacity="0.24"/><stop offset="100%" stop-color="#93c5fd" stop-opacity="0.02"/></linearGradient>
           </defs>
           @for (tick of yTicks; track tick) {
             <line x1="54" [attr.y1]="chartY(chartTickValue(tick))" x2="980" [attr.y2]="chartY(chartTickValue(tick))" stroke="#e2e8f0"/>
@@ -87,12 +87,28 @@
           }
           @if (areaPath(chartPoints(), 'programados')) { <path [attr.d]="areaPath(chartPoints(), 'programados')" fill="url(#programadosArea)"/> }
           @if (areaPath(chartPoints(), 'presentes')) { <path [attr.d]="areaPath(chartPoints(), 'presentes')" fill="url(#presentesArea)"/> }
-          @if (linePath(chartPoints(), 'programados')) { <path [attr.d]="linePath(chartPoints(), 'programados')" fill="none" stroke="#86efac" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/> }
-          @if (linePath(chartPoints(), 'presentes')) { <path [attr.d]="linePath(chartPoints(), 'presentes')" fill="none" stroke="#15803d" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/> }
+          @if (linePath(chartPoints(), 'programados')) { <path [attr.d]="linePath(chartPoints(), 'programados')" fill="none" stroke="#93c5fd" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/> }
+          @if (linePath(chartPoints(), 'presentes')) { <path [attr.d]="linePath(chartPoints(), 'presentes')" fill="none" stroke="#2563eb" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/> }
+
           @for (point of chartPoints(); track $index; let i=$index) {
-            @if (point.programados !== null) { <circle [attr.cx]="chartX(i, chartPoints().length)" [attr.cy]="chartY(point.programados)" r="4" fill="#86efac" stroke="white" stroke-width="2"><title>{{ point.label }} · Programados: {{ point.programados }}</title></circle> }
-            @if (point.presentes !== null) { <circle [attr.cx]="chartX(i, chartPoints().length)" [attr.cy]="chartY(point.presentes)" r="4.5" fill="#15803d" stroke="white" stroke-width="2"><title>{{ point.label }} · Presentes: {{ point.presentes }}</title></circle> }
-            <text [attr.x]="chartX(i, chartPoints().length)" y="272" text-anchor="middle" font-size="10" fill="#64748b">{{ point.label }}</text>
+            <rect [attr.x]="chartX(i, chartPoints().length) - 14" y="10" width="28" height="245" fill="transparent" (mouseenter)="setPuntoHover(i)"/>
+            @if (point.programados !== null) { <circle [attr.cx]="chartX(i, chartPoints().length)" [attr.cy]="chartY(point.programados)" r="4" fill="#93c5fd" stroke="white" stroke-width="2"/> }
+            @if (point.presentes !== null) { <circle [attr.cx]="chartX(i, chartPoints().length)" [attr.cy]="chartY(point.presentes)" r="4.5" fill="#2563eb" stroke="white" stroke-width="2"/> }
+            <text [attr.x]="chartX(i, chartPoints().length)" y="274" text-anchor="middle" font-size="10" fill="#64748b">{{ point.label }}</text>
+          }
+
+          @if (puntoHover() !== null; as hoverIndex) {
+            @if (chartPoints()[hoverIndex]; as point) {
+              <line [attr.x1]="chartX(hoverIndex, chartPoints().length)" y1="18" [attr.x2]="chartX(hoverIndex, chartPoints().length)" y2="238" stroke="#94a3b8" stroke-dasharray="4 4"/>
+              <g class="chart-tooltip" [attr.transform]="'translate(' + tooltipX(hoverIndex, chartPoints().length) + ',38)'">
+                <rect width="154" height="112" rx="10" fill="white" stroke="#dbe3ef"/>
+                <text x="12" y="20" font-size="11" font-weight="700" fill="#0f172a">{{ point.label }}</text>
+                <circle cx="14" cy="40" r="4" fill="#2563eb"/><text x="25" y="44" font-size="10" fill="#334155">Presentes: {{ point.presentes ?? 0 }}</text>
+                <circle cx="14" cy="59" r="4" fill="#93c5fd"/><text x="25" y="63" font-size="10" fill="#334155">Programados: {{ point.programados ?? 0 }}</text>
+                <text x="12" y="82" font-size="10" fill="#64748b">Ausencias: {{ point.ausentes }}</text>
+                <text x="12" y="101" font-size="10" font-weight="700" fill="#1d4ed8">Asistencia: {{ point.porcentaje | number:'1.0-1' }}%</text>
+              </g>
+            }
           }
         </svg>
       </div>
@@ -110,22 +126,75 @@
 
     <section class="grid gap-6 xl:grid-cols-2">
       <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 class="text-lg font-semibold text-slate-950">Asistencia por turno</h2>
-        <div class="mt-5 space-y-4">
-          @for (turno of resumenTurnos(); track turno.id) {
-            <div><div class="mb-2 flex justify-between text-sm"><span class="font-medium text-slate-700">{{ turno.nombre }}</span><strong>{{ turno.porcentaje | number:'1.0-1' }}%</strong></div><div class="h-2.5 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full bg-emerald-700" [style.width.%]="turno.porcentaje"></div></div></div>
-          }
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 class="text-lg font-semibold text-slate-950">Asistencia por turno</h2>
+            <p class="mt-1 text-sm text-slate-500">Promedio anual y mensual del turno seleccionado.</p>
+          </div>
+          <select class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700" [value]="turnoAnalitica()?.id ?? ''" (change)="onTurnoAnaliticaChange($event)">
+            @for (turno of turnos(); track turno.id) { <option [value]="turno.id">Turno {{ turno.codigo }}</option> }
+          </select>
+        </div>
+
+        <div class="mt-5 grid gap-5 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
+          <div class="relative mx-auto w-full max-w-[330px]">
+            <svg viewBox="0 0 240 145" class="shift-gauge">
+              <path d="M 35 120 A 85 85 0 0 1 205 120" pathLength="100" fill="none" stroke="#e2e8f0" stroke-width="14" stroke-linecap="round"/>
+              <path d="M 35 120 A 85 85 0 0 1 205 120" pathLength="100" fill="none" stroke="#4f67ff" stroke-width="14" stroke-linecap="round" [attr.stroke-dasharray]="gaugeDash(promedioTurnoAnual())"/>
+            </svg>
+            <div class="gauge-center">
+              <span>Promedio anual</span>
+              <strong>{{ promedioTurnoAnual() | number:'1.0-1' }}%</strong>
+              <small>{{ turnoAnalitica()?.codigo ? 'Turno ' + turnoAnalitica()?.codigo : 'Sin turno' }}</small>
+            </div>
+          </div>
+
+          <div class="space-y-5 border-t border-slate-100 pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+            <div>
+              <div class="mb-2 flex items-center justify-between gap-3"><span class="text-sm text-slate-500">Promedio del mes</span><strong class="text-slate-900">{{ promedioTurnoMes() | number:'1.0-1' }}%</strong></div>
+              <div class="h-2 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full bg-blue-500" [style.width.%]="promedioTurnoMes()"></div></div>
+              <p class="mt-2 text-xs text-slate-400">{{ registrosTurnoMes() }} registros en {{ nombreMes() }}</p>
+            </div>
+            <div>
+              <div class="mb-2 flex items-center justify-between gap-3"><span class="text-sm text-slate-500">Promedio anual</span><strong class="text-slate-900">{{ promedioTurnoAnual() | number:'1.0-1' }}%</strong></div>
+              <div class="h-2 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full bg-indigo-500" [style.width.%]="promedioTurnoAnual()"></div></div>
+              <p class="mt-2 text-xs text-slate-400">{{ registrosTurnoAnual() }} registros durante {{ anio() }}</p>
+            </div>
+          </div>
         </div>
       </article>
+
       <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 class="text-lg font-semibold text-slate-950">Ausencias por motivo</h2>
+        <div>
+          <h2 class="text-lg font-semibold text-slate-950">Ausencias por motivo</h2>
+          <p class="mt-1 text-sm text-slate-500">Distribución de motivos dentro del período seleccionado.</p>
+        </div>
+
         @if (motivos().length) {
-          <div class="mt-5 space-y-4">
-            @for (motivo of motivos(); track motivo.motivo) {
-              <div><div class="mb-2 flex justify-between text-sm"><span class="font-medium text-slate-700">{{ motivo.motivo }}</span><strong>{{ motivo.total }}</strong></div><div class="h-2.5 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full bg-amber-500" [style.width.%]="motivoWidth(motivo.total)"></div></div></div>
-            }
+          <div class="mt-6 grid gap-6 lg:grid-cols-[220px_1fr] lg:items-center">
+            <div class="relative mx-auto h-[210px] w-[210px]">
+              <svg viewBox="0 0 220 220" class="donut-chart">
+                <circle cx="110" cy="110" r="72" fill="none" stroke="#eef2f7" stroke-width="36"/>
+                @for (motivo of motivos(); track motivo.motivo) {
+                  <circle cx="110" cy="110" r="72" pathLength="100" fill="none" [attr.stroke]="motivo.color" stroke-width="36" [attr.stroke-dasharray]="motivo.porcentaje + ' ' + (100 - motivo.porcentaje)" [attr.stroke-dashoffset]="-motivo.offset" transform="rotate(-90 110 110)"/>
+                }
+              </svg>
+              <div class="donut-center"><span>Total</span><strong>{{ totalMotivos() }}</strong><small>ausencias</small></div>
+            </div>
+
+            <div class="space-y-4">
+              @for (motivo of motivos(); track motivo.motivo) {
+                <div class="grid grid-cols-[12px_1fr_auto] items-center gap-3">
+                  <span class="h-2.5 w-2.5 rounded-full" [style.background]="motivo.color"></span>
+                  <div class="min-w-0"><p class="truncate text-sm font-semibold text-slate-700">{{ motivo.motivo }}</p><p class="mt-0.5 text-xs text-slate-400">{{ motivo.porcentaje | number:'1.0-1' }}% del total</p></div>
+                  <strong class="text-sm text-slate-900">{{ motivo.total }}</strong>
+                </div>
+              }
+            </div>
           </div>
-        } @else { <p class="mt-5 rounded-2xl bg-slate-50 p-5 text-sm text-slate-500">No hay ausencias registradas en el periodo seleccionado.</p> }
+        } @else {
+          <p class="mt-5 rounded-2xl bg-slate-50 p-5 text-sm text-slate-500">No hay ausencias registradas en el periodo seleccionado.</p>
+        }
       </article>
     </section>
   }
