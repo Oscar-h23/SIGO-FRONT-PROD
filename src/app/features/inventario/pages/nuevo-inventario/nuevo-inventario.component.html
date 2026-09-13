@@ -1,45 +1,228 @@
-<div class="head">
-  <div>
-    <h1>Nuevo inventario</h1>
-    <p>Registra la cantidad física encontrada.</p>
-  </div>
+<div class="inventario-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">SIGO · Inventario</p>
+      <h1>Nuevo inventario</h1>
+      <p class="subtitle">Registra el conteo físico de los productos asignados a tu plaza.</p>
+    </div>
 
-  @if (!inventarioId) {
-    <button class="primary" (click)="iniciar()" [disabled]="cargando">
-      {{ cargando ? 'Iniciando...' : 'Iniciar inventario' }}
-    </button>
+    <div class="user-card">
+      <span class="user-card__label">Plaza asignada</span>
+      <strong>{{ plazaNombre }}</strong>
+      <small>{{ usuario?.nombre }} · {{ usuario?.rol }}</small>
+    </div>
+  </header>
+
+  @if (error) {
+    <div class="alert alert--error">{{ error }}</div>
   }
-</div>
 
-@if (error) { <div class="alert error">{{ error }}</div> }
-@if (mensaje) { <div class="alert success">{{ mensaje }}</div> }
+  @if (mensaje) {
+    <div class="alert alert--success">{{ mensaje }}</div>
+  }
 
-@if (inventarioId) {
-  <div class="info">Inventario #{{ inventarioId }}</div>
-
-  @for (ambito of ambitos(); track ambito) {
-    <section>
-      <h2>{{ ambito }}</h2>
-      <div class="table">
-        <div class="row header">
-          <span>Producto</span><span>Unidad</span><span>Cantidad</span>
+  @if (recuperando) {
+    <section class="loading-card">
+      <div class="skeleton skeleton--title"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </section>
+  } @else if (!inventarioId) {
+    <section class="start-card">
+      <div class="start-card__content">
+        <div class="start-icon">01</div>
+        <div>
+          <p class="eyebrow">Inicio del conteo</p>
+          <h2>Inventario de {{ plazaNombre }}</h2>
+          <p>
+            El sistema mostrará únicamente los productos permitidos para tu rol y tu plaza.
+            Registra la cantidad física encontrada en cada producto.
+          </p>
         </div>
-        @for (p of privadosAmbito(ambito); track p.id) {
-          <div class="row">
-            <span>
-              <strong>{{ p.nombre }}</strong>
-              <small>{{ p.codigo }}</small>
-            </span>
-            <span>{{ p.unidadMedida }}</span>
-            <input type="number" min="0" [(ngModel)]="cantidades[p.id]">
+      </div>
+
+      <div class="rules-grid">
+        <article>
+          <span>Plaza</span>
+          <strong>{{ plazaNombre }}</strong>
+        </article>
+        <article>
+          <span>Responsable</span>
+          <strong>{{ usuario?.nombre || 'Usuario actual' }}</strong>
+        </article>
+        <article>
+          <span>Rol</span>
+          <strong>{{ usuario?.rol || '-' }}</strong>
+        </article>
+      </div>
+
+      <div class="start-actions">
+        <p>Al finalizar, el conteo quedará cerrado y actualizará el stock registrado de la plaza.</p>
+        <button class="btn btn--primary" type="button" (click)="iniciar()" [disabled]="cargando || !usuario?.plazaId">
+          {{ cargando ? 'Iniciando inventario...' : 'Iniciar conteo' }}
+        </button>
+      </div>
+    </section>
+  } @else {
+    <section class="summary-card">
+      <div class="summary-card__top">
+        <div>
+          <p class="eyebrow">Inventario en proceso</p>
+          <div class="inventory-title-row">
+            <h2>Inventario #{{ inventarioId }}</h2>
+            <span class="status-badge">En proceso</span>
           </div>
+          <p>{{ inventario?.plaza }} · {{ inventario?.responsable }}</p>
+        </div>
+
+        <div class="progress-number">
+          <strong>{{ porcentaje() }}%</strong>
+          <span>completado</span>
+        </div>
+      </div>
+
+      <div class="progress-track">
+        <div class="progress-fill" [style.width.%]="porcentaje()"></div>
+      </div>
+
+      <div class="metrics-grid">
+        <article>
+          <span>Total productos</span>
+          <strong>{{ productos.length }}</strong>
+        </article>
+        <article>
+          <span>Contados</span>
+          <strong>{{ contados() }}</strong>
+        </article>
+        <article [class.metric--pending]="pendientes() > 0">
+          <span>Pendientes</span>
+          <strong>{{ pendientes() }}</strong>
+        </article>
+      </div>
+    </section>
+
+    <section class="toolbar-card">
+      <div class="search-box">
+        <label for="inventario-busqueda">Buscar producto</label>
+        <div class="search-control">
+          <input
+            id="inventario-busqueda"
+            type="search"
+            [(ngModel)]="busqueda"
+            placeholder="Nombre, código, categoría o ámbito">
+          @if (busqueda) {
+            <button type="button" (click)="limpiarBusqueda()">Limpiar</button>
+          }
+        </div>
+      </div>
+
+      <div class="toolbar-info">
+        <span>Mostrando</span>
+        <strong>{{ productosVisibles().length }} / {{ productos.length }}</strong>
+      </div>
+    </section>
+
+    @if (!productos.length) {
+      <section class="empty-card">
+        <h2>No hay productos disponibles</h2>
+        <p>No existen productos habilitados para tu rol y plaza en este inventario.</p>
+      </section>
+    } @else if (!productosVisibles().length) {
+      <section class="empty-card">
+        <h2>No encontramos coincidencias</h2>
+        <p>Prueba con otro nombre, código, categoría o ámbito.</p>
+      </section>
+    } @else {
+      <div class="groups">
+        @for (ambito of ambitosVisibles(); track ambito) {
+          <section class="group-card">
+            <header class="group-header">
+              <div>
+                <p class="eyebrow">Ámbito</p>
+                <h2>{{ ambito }}</h2>
+              </div>
+              <span>{{ productosPorAmbito(ambito).length }} producto(s)</span>
+            </header>
+
+            <div class="product-list">
+              @for (p of productosPorAmbito(ambito); track p.id) {
+                <article class="product-row" [class.product-row--done]="contado(p.id)">
+                  <div class="product-main">
+                    <div class="product-state">{{ contado(p.id) ? '✓' : '·' }}</div>
+                    <div>
+                      <div class="product-name-line">
+                        <strong>{{ p.nombre }}</strong>
+                        <span>{{ p.codigo }}</span>
+                      </div>
+                      <p>{{ categoriaProducto(p) }}</p>
+                      @if (p.descripcion) {
+                        <small>{{ p.descripcion }}</small>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="count-field">
+                    <label [for]="'cantidad-' + p.id">Cantidad física</label>
+                    <div class="count-control">
+                      <input
+                        [id]="'cantidad-' + p.id"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        inputmode="decimal"
+                        [(ngModel)]="cantidades[p.id]"
+                        placeholder="0">
+                      <span>{{ p.unidadMedida }}</span>
+                    </div>
+                  </div>
+                </article>
+              }
+            </div>
+          </section>
         }
+      </div>
+    }
+
+    <section class="sticky-actions">
+      <div>
+        <strong>{{ contados() }} de {{ productos.length }} productos registrados</strong>
+        <span>@if (todosContados()) { Conteo completo. Ya puedes finalizar. } @else { Completa los {{ pendientes() }} producto(s) pendientes. }</span>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn btn--secondary" type="button" (click)="guardar()" [disabled]="guardando || finalizando || contados() === 0">
+          {{ guardando ? 'Guardando...' : 'Guardar avance' }}
+        </button>
+        <button class="btn btn--primary" type="button" (click)="solicitarFinalizacion()" [disabled]="finalizando || !productos.length">
+          Finalizar inventario
+        </button>
       </div>
     </section>
   }
 
-  <div class="actions">
-    <button (click)="guardar()">Guardar avance</button>
-    <button class="primary" (click)="finalizar()">Finalizar inventario</button>
-  </div>
-}
+  @if (confirmarFinalizacion) {
+    <div class="modal-backdrop" (click)="cancelarFinalizacion()">
+      <section class="confirm-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+        <div class="confirm-modal__mark">✓</div>
+        <p class="eyebrow">Confirmación final</p>
+        <h2>¿Finalizar el inventario?</h2>
+        <p>
+          Se registrarán <strong>{{ productos.length }} productos</strong> para
+          <strong>{{ plazaNombre }}</strong>. Después de finalizar, el conteo quedará cerrado.
+        </p>
+
+        <div class="confirm-summary">
+          <span>Inventario #{{ inventarioId }}</span>
+          <span>{{ porcentaje() }}% completo</span>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn--secondary" type="button" (click)="cancelarFinalizacion()" [disabled]="finalizando">Seguir revisando</button>
+          <button class="btn btn--primary" type="button" (click)="finalizar()" [disabled]="finalizando">
+            {{ finalizando ? 'Finalizando...' : 'Confirmar y finalizar' }}
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+</div>
