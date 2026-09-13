@@ -80,6 +80,10 @@ export class DashboardComponent implements OnInit {
   readonly esSupervisor = computed(() => this.auth.tieneRol('SUPERVISOR'));
   readonly plazaBloqueada = computed(() => !this.esSupervisor() && !!this.auth.usuario()?.plazaId);
   readonly nombreMes = computed(() => this.meses.find(item => item.id === this.mes())?.nombre ?? 'Mes');
+  readonly nombreMesAnterior = computed(() => {
+    const mesAnterior = this.mes() === 1 ? 12 : this.mes() - 1;
+    return this.meses.find(item => item.id === mesAnterior)?.nombre ?? 'Mes anterior';
+  });
   readonly plazaSeleccionada = computed(() => {
     if (!this.plazaId()) return 'Todas las plazas';
     return this.plazas().find(item => item.id === this.plazaId())?.codigo ?? this.auth.usuario()?.plaza ?? 'Plaza';
@@ -206,6 +210,33 @@ export class DashboardComponent implements OnInit {
     const id = this.turnoAnalitica()?.id;
     return id ? this.registrosMesActual().filter(r => r.turnoId === id).length : 0;
   });
+
+  readonly promedioTurnoMesAnterior = computed(() => {
+    const id = this.turnoAnalitica()?.id;
+    if (!id) return 0;
+    const mesAnterior = this.mes() === 1 ? 12 : this.mes() - 1;
+    const anioAnterior = this.mes() === 1 ? this.anio() - 1 : this.anio();
+    const registros = this.registrosAnio().filter(r =>
+      r.turnoId === id &&
+      Number(r.fecha.slice(0, 4)) === anioAnterior &&
+      Number(r.fecha.slice(5, 7)) === mesAnterior
+    );
+    return this.weightedPercentage(registros);
+  });
+
+  readonly registrosTurnoMesAnterior = computed(() => {
+    const id = this.turnoAnalitica()?.id;
+    if (!id) return 0;
+    const mesAnterior = this.mes() === 1 ? 12 : this.mes() - 1;
+    const anioAnterior = this.mes() === 1 ? this.anio() - 1 : this.anio();
+    return this.registrosAnio().filter(r =>
+      r.turnoId === id &&
+      Number(r.fecha.slice(0, 4)) === anioAnterior &&
+      Number(r.fecha.slice(5, 7)) === mesAnterior
+    ).length;
+  });
+
+  readonly anioMesAnterior = computed(() => this.mes() === 1 ? this.anio() - 1 : this.anio());
 
   ngOnInit(): void {
     const usuario = this.auth.usuario();
