@@ -11,6 +11,7 @@ export const routes:Routes=[
   {path:'asistencia/historial/editar/:id',canActivate:[moduleGuard('ASISTENCIA')],loadComponent:()=>import('./features/asistencia/pages/editar/asistencia-edit.component').then(m=>m.AsistenciaEditComponent)},
   {path:'relevos/nuevo',canActivate:[moduleGuard('RELEVOS')],loadComponent:()=>import('./features/relevos/pages/nuevo/relevo-nuevo.component').then(m=>m.RelevoNuevoComponent)},
   {path:'relevos/historial',canActivate:[moduleGuard('RELEVOS')],loadComponent:()=>import('./features/relevos/pages/historial/relevo-historial.component').then(m=>m.RelevoHistorialComponent)},
+  {path:'relevos/editar/:id',canActivate:[moduleGuard('RELEVOS')],loadComponent:()=>import('./features/relevos/pages/editar/relevo-editar.component').then(m=>m.RelevoEditarComponent)},
   {path:'relevos/:id',canActivate:[moduleGuard('RELEVOS')],loadComponent:()=>import('./features/relevos/pages/detalle/relevo-detalle.component').then(m=>m.RelevoDetalleComponent)},
   {path:'inventario/nuevo',canActivate:[moduleGuard('INVENTARIO')],loadComponent:()=>import('./features/inventario/pages/nuevo-inventario/nuevo-inventario.component').then(m=>m.NuevoInventarioComponent)},
   {path:'inventario/historial',canActivate:[moduleGuard('INVENTARIO')],loadComponent:()=>import('./features/inventario/pages/historial/historial.component').then(m=>m.HistorialComponent)},
