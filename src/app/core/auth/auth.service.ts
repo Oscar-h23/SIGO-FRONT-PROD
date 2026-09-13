@@ -15,7 +15,7 @@ export class AuthService {
   async login(codigo:number,password:string):Promise<LoginResponse>{
     const r=await firstValueFrom(this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`,{codigo,password}));
     localStorage.setItem(this.tokenKey,r.token);
-    const u={...r.usuario,requiereCambioPassword:r.requiereCambioPassword ?? r.usuario.requiereCambioPassword ?? false};
+    const u=this.normalizarUsuario({...r.usuario,requiereCambioPassword:r.requiereCambioPassword ?? r.usuario.requiereCambioPassword ?? false});
     localStorage.setItem(this.userKey,JSON.stringify(u));
     this.usuario.set(u);
     return {...r,usuario:u};
@@ -26,7 +26,7 @@ export class AuthService {
     try{
       const u=await firstValueFrom(this.http.get<UsuarioSesion>(`${environment.apiUrl}/auth/me`));
       const prev=this.usuario();
-      const merged={...u,requiereCambioPassword: u.requiereCambioPassword ?? prev?.requiereCambioPassword ?? false};
+      const merged=this.normalizarUsuario({...u,requiereCambioPassword: u.requiereCambioPassword ?? prev?.requiereCambioPassword ?? false});
       localStorage.setItem(this.userKey,JSON.stringify(merged));
       this.usuario.set(merged);
       return merged;
@@ -54,6 +54,13 @@ export class AuthService {
   tieneModulo(modulo:ModuloSigo):boolean{return this.usuario()?.modulos?.includes(modulo) ?? false;}
   requiereCambio():boolean{return this.usuario()?.requiereCambioPassword===true;}
   private readUser():UsuarioSesion|null{
-    try{const raw=localStorage.getItem(this.userKey);return raw?JSON.parse(raw):null;}catch{return null;}
+    try{
+      const raw=localStorage.getItem(this.userKey);
+      if(!raw) return null;
+      return this.normalizarUsuario(JSON.parse(raw) as UsuarioSesion);
+    }catch{return null;}
+  }
+  private normalizarUsuario(usuario:UsuarioSesion):UsuarioSesion{
+    return {...usuario,trabajadorId:usuario.trabajadorId ?? usuario.id};
   }
 }
