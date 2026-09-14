@@ -1,0 +1,78 @@
+<div class="chat-page">
+  <header class="chat-header">
+    <div>
+      <p class="eyebrow">SIGO · Asistente</p>
+      <h1>Asistente operativo</h1>
+      <p>Consulta información registrada en SIGO sobre asistencia, relevos, vías, trabajadores y operación.</p>
+    </div>
+    <button type="button" class="secondary" (click)="nuevaConversacion()" [disabled]="enviando || !mensajes.length">Nueva conversación</button>
+  </header>
+
+  <section class="assistant-shell">
+    <div class="assistant-status">
+      <div class="assistant-avatar">AI</div>
+      <div>
+        <strong>Asistente SIGO</strong>
+        <span>Solo lectura · No modifica información</span>
+      </div>
+      <span class="status-dot"></span>
+    </div>
+
+    <div class="messages" #messagesContainer>
+      @if (!mensajes.length) {
+        <div class="welcome-state">
+          <div class="welcome-mark">S</div>
+          <h2>¿Qué necesitas consultar?</h2>
+          <p>Puedes hacer preguntas sobre la información operativa registrada en el sistema.</p>
+
+          <div class="suggestions">
+            @for (sugerencia of sugerencias; track sugerencia) {
+              <button type="button" (click)="enviar(sugerencia)" [disabled]="enviando">{{ sugerencia }}</button>
+            }
+          </div>
+        </div>
+      } @else {
+        @for (item of mensajes; track $index) {
+          <article class="message-row" [class.message-row--user]="item.role === 'user'">
+            <div class="message-avatar">{{ item.role === 'user' ? 'TÚ' : 'AI' }}</div>
+            <div class="message-content">
+              <div class="message-meta">
+                <strong>{{ item.role === 'user' ? (auth.usuario()?.nombre || 'Tú') : 'Asistente SIGO' }}</strong>
+                <span>{{ item.time | date:'HH:mm' }}</span>
+              </div>
+              <div class="bubble">{{ item.text }}</div>
+            </div>
+          </article>
+        }
+
+        @if (enviando) {
+          <article class="message-row">
+            <div class="message-avatar">AI</div>
+            <div class="message-content">
+              <div class="message-meta"><strong>Asistente SIGO</strong></div>
+              <div class="bubble typing"><span></span><span></span><span></span></div>
+            </div>
+          </article>
+        }
+      }
+    </div>
+
+    @if (error) {
+      <div class="chat-error">{{ error }}</div>
+    }
+
+    <div class="composer">
+      <textarea
+        rows="1"
+        [(ngModel)]="mensaje"
+        (keydown)="onKeydown($event)"
+        [disabled]="enviando"
+        maxlength="1000"
+        placeholder="Escribe una consulta sobre SIGO..."></textarea>
+      <button type="button" class="send-button" (click)="enviar()" [disabled]="enviando || !mensaje.trim()">
+        {{ enviando ? 'Consultando...' : 'Enviar' }}
+      </button>
+    </div>
+    <div class="composer-help">Enter para enviar · Shift + Enter para nueva línea</div>
+  </section>
+</div>
