@@ -16,7 +16,8 @@ export const routes:Routes=[
   {path:'inventario/nuevo',canActivate:[moduleGuard('INVENTARIO')],loadComponent:()=>import('./features/inventario/pages/nuevo-inventario/nuevo-inventario.component').then(m=>m.NuevoInventarioComponent)},
   {path:'inventario/historial',canActivate:[moduleGuard('INVENTARIO')],loadComponent:()=>import('./features/inventario/pages/historial/historial.component').then(m=>m.HistorialComponent)},
   {path:'inventario/stock',canActivate:[moduleGuard('INVENTARIO')],loadComponent:()=>import('./features/inventario/pages/stock/stock.component').then(m=>m.StockComponent)},
-  {path:'inventario/productos',canActivate:[moduleGuard('ADMIN_PRODUCTOS'),roleGuard('SUPERVISOR','CONTROLADOR')],loadComponent:()=>import('./features/inventario/pages/productos/productos.component').then(m=>m.ProductosComponent)}
+  {path:'inventario/productos',canActivate:[moduleGuard('ADMIN_PRODUCTOS'),roleGuard('SUPERVISOR','CONTROLADOR')],loadComponent:()=>import('./features/inventario/pages/productos/productos.component').then(m=>m.ProductosComponent)},
+  {path:'usuarios/contrasenas',canActivate:[moduleGuard('TRABAJADORES'),roleGuard('SUPERVISOR')],loadComponent:()=>import('./features/usuarios/password-admin/password-admin.component').then(m=>m.PasswordAdminComponent)}
  ]},
  {path:'**',redirectTo:''}
 ];
