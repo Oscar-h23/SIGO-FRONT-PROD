@@ -1,238 +1,50 @@
 <div class="inventario-page">
-  <header class="page-header">
-    <div>
-      <p class="eyebrow">SIGO · Inventario</p>
-      <h1>Nuevo inventario</h1>
-      <p class="subtitle">Registra solo los productos cuyo stock haya cambiado. Si dejas una cantidad vacía, se conservará el stock anterior.</p>
-    </div>
+  <header class="page-header"><div><p class="eyebrow">SIGO · Inventario</p><h1>Nuevo inventario</h1><p class="subtitle">Registra solo los productos cuyo stock haya cambiado. Si dejas una cantidad vacía, se conservará el stock anterior.</p></div><div class="user-card"><span class="user-card__label">Plaza asignada</span><strong>{{ plazaNombre }}</strong><small>{{ usuario?.nombre }} · {{ usuario?.rol }}</small></div></header>
 
-    <div class="user-card">
-      <span class="user-card__label">Plaza asignada</span>
-      <strong>{{ plazaNombre }}</strong>
-      <small>{{ usuario?.nombre }} · {{ usuario?.rol }}</small>
-    </div>
-  </header>
-
-  @if (error) {
-    <div class="alert alert--error">{{ error }}</div>
-  }
-
-  @if (mensaje) {
-    <div class="alert alert--success">{{ mensaje }}</div>
-  }
+  @if (error) { <div class="alert alert--error">{{ error }}</div> }
+  @if (mensaje) { <div class="alert alert--success">{{ mensaje }}</div> }
 
   @if (recuperando) {
-    <section class="loading-card">
-      <div class="skeleton skeleton--title"></div>
-      <div class="skeleton"></div>
-      <div class="skeleton"></div>
-    </section>
+    <section class="loading-card"><div class="skeleton skeleton--title"></div><div class="skeleton"></div><div class="skeleton"></div></section>
   } @else if (!inventarioId) {
     <section class="start-card">
-      <div class="start-card__content">
-        <div class="start-icon">01</div>
-        <div>
-          <p class="eyebrow">Inicio del conteo</p>
-          <h2>Inventario de {{ plazaNombre }}</h2>
-          <p>
-            El sistema mostrará únicamente los productos permitidos para tu rol y tu plaza.
-            Solo necesitas ingresar una cantidad cuando el stock haya cambiado. Los productos que dejes vacíos conservarán su stock anterior.
-          </p>
-        </div>
-      </div>
-
-      <div class="rules-grid">
-        <article>
-          <span>Plaza</span>
-          <strong>{{ plazaNombre }}</strong>
-        </article>
-        <article>
-          <span>Responsable</span>
-          <strong>{{ usuario?.nombre || 'Usuario actual' }}</strong>
-        </article>
-        <article>
-          <span>Rol</span>
-          <strong>{{ usuario?.rol || '-' }}</strong>
-        </article>
-      </div>
-
-      <div class="start-actions">
-        <p>Al finalizar, los productos sin cambios conservarán automáticamente el último stock registrado de la plaza.</p>
-        <button class="btn btn--primary" type="button" (click)="iniciar()" [disabled]="cargando || !usuario?.plazaId">
-          {{ cargando ? 'Iniciando inventario...' : 'Iniciar conteo' }}
-        </button>
-      </div>
+      <div class="start-card__content"><div class="start-icon">01</div><div><p class="eyebrow">Inicio del conteo</p><h2>Inventario de {{ plazaNombre }}</h2><p>El sistema mostrará únicamente los productos permitidos para tu rol y tu plaza. Solo necesitas ingresar una cantidad cuando el stock haya cambiado. Los productos que dejes vacíos conservarán su stock anterior.</p></div></div>
+      <div class="rules-grid"><article><span>Plaza</span><strong>{{ plazaNombre }}</strong></article><article><span>Responsable</span><strong>{{ usuario?.nombre || 'Usuario actual' }}</strong></article><article><span>Rol</span><strong>{{ usuario?.rol || '-' }}</strong></article></div>
+      <div class="start-actions"><p>Al finalizar, los productos sin cambios conservarán automáticamente el último stock registrado de la plaza.</p><button class="btn btn--primary" type="button" (click)="iniciar()" [disabled]="cargando || !usuario?.plazaId">{{ cargando ? 'Iniciando inventario...' : 'Iniciar conteo' }}</button></div>
     </section>
   } @else {
     <section class="summary-card">
-      <div class="summary-card__top">
-        <div>
-          <p class="eyebrow">Inventario en proceso</p>
-          <div class="inventory-title-row">
-            <h2>Inventario #{{ inventarioId }}</h2>
-            <span class="status-badge">En proceso</span>
-          </div>
-          <p>{{ inventario?.plaza }} · {{ inventario?.responsable }}</p>
-        </div>
-
-        <div class="progress-number">
-          <strong>{{ porcentaje() }}%</strong>
-          <span>con stock definido</span>
-        </div>
-      </div>
-
-      <div class="progress-track">
-        <div class="progress-fill" [style.width.%]="porcentaje()"></div>
-      </div>
-
-      <div class="metrics-grid">
-        <article>
-          <span>Total productos</span>
-          <strong>{{ productos.length }}</strong>
-        </article>
-        <article>
-          <span>Modificados</span>
-          <strong>{{ contados() }}</strong>
-        </article>
-        <article [class.metric--pending]="pendientes() > 0">
-          <span>Sin stock previo</span>
-          <strong>{{ pendientes() }}</strong>
-        </article>
-      </div>
+      <div class="summary-card__top"><div><p class="eyebrow">Inventario en proceso</p><div class="inventory-title-row"><h2>Inventario #{{ inventarioId }}</h2><span class="status-badge">En proceso</span></div><p>{{ inventario?.plaza }} · {{ inventario?.responsable }}</p></div><div class="progress-number"><strong>{{ porcentaje() }}%</strong><span>con stock definido</span></div></div>
+      <div class="progress-track"><div class="progress-fill" [style.width.%]="porcentaje()"></div></div>
+      <div class="metrics-grid"><article><span>Total productos</span><strong>{{ productos.length }}</strong></article><article><span>Modificados</span><strong>{{ contados() }}</strong></article><article [class.metric--pending]="pendientes() > 0"><span>Sin stock previo</span><strong>{{ pendientes() }}</strong></article></div>
     </section>
 
-    <section class="toolbar-card">
-      <div class="search-box">
-        <label for="inventario-busqueda">Buscar producto</label>
-        <div class="search-control">
-          <input
-            id="inventario-busqueda"
-            type="search"
-            [(ngModel)]="busqueda"
-            placeholder="Nombre, código, categoría o ámbito">
-          @if (busqueda) {
-            <button type="button" (click)="limpiarBusqueda()">Limpiar</button>
-          }
-        </div>
-      </div>
-
-      <div class="toolbar-info">
-        <span>Mostrando</span>
-        <strong>{{ productosVisibles().length }} / {{ productos.length }}</strong>
-      </div>
-    </section>
+    <section class="toolbar-card"><div class="search-box"><label for="inventario-busqueda">Buscar producto</label><div class="search-control"><input id="inventario-busqueda" type="search" [(ngModel)]="busqueda" placeholder="Nombre, código, categoría o ámbito">@if (busqueda) { <button type="button" (click)="limpiarBusqueda()">Limpiar</button> }</div></div><div class="toolbar-info"><span>Mostrando</span><strong>{{ productosVisibles().length }} / {{ productos.length }}</strong></div></section>
 
     @if (!productos.length) {
-      <section class="empty-card">
-        <h2>No hay productos disponibles</h2>
-        <p>No existen productos habilitados para tu rol y plaza en este inventario.</p>
-      </section>
+      <section class="empty-card"><h2>No hay productos disponibles</h2><p>No existen productos habilitados para tu rol y plaza en este inventario.</p></section>
     } @else if (!productosVisibles().length) {
-      <section class="empty-card">
-        <h2>No encontramos coincidencias</h2>
-        <p>Prueba con otro nombre, código, categoría o ámbito.</p>
-      </section>
+      <section class="empty-card"><h2>No encontramos coincidencias</h2><p>Prueba con otro nombre, código, categoría o ámbito.</p></section>
     } @else {
       <div class="groups">
         @for (ambito of ambitosVisibles(); track ambito) {
-          <section class="group-card">
-            <header class="group-header">
-              <div>
-                <p class="eyebrow">Ámbito</p>
-                <h2>{{ ambito }}</h2>
-              </div>
-              <span>{{ productosPorAmbito(ambito).length }} producto(s)</span>
-            </header>
-
-            <div class="product-list">
-              @for (p of productosPorAmbito(ambito); track p.id) {
-                <article class="product-row" [class.product-row--done]="contado(p.id)">
-                  <div class="product-main">
-                    <div class="product-state">{{ contado(p.id) ? '✓' : '·' }}</div>
-                    <div>
-                      <div class="product-name-line">
-                        <strong>{{ p.nombre }}</strong>
-                        <span>{{ p.codigo }}</span>
-                      </div>
-                      <p>{{ categoriaProducto(p) }}</p>
-                      @if (p.descripcion) {
-                        <small>{{ p.descripcion }}</small>
-                      }
-                      @if (tieneStockPrevio(p.id)) {
-                        <small>Stock actual: <strong>{{ stockPrevioProducto(p.id) }}</strong> {{ p.unidadMedida }} · Déjalo vacío si no cambió.</small>
-                      } @else {
-                        <small>Sin stock previo: debes ingresar una cantidad para este producto.</small>
-                      }
-                    </div>
-                  </div>
-
-                  <div class="count-field">
-                    <label [for]="'cantidad-' + p.id">Nueva cantidad</label>
-                    <div class="count-control">
-                      <input
-                        [id]="'cantidad-' + p.id"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        inputmode="decimal"
-                        [(ngModel)]="cantidades[p.id]"
-                        placeholder="Sin cambio">
-                      <span>{{ p.unidadMedida }}</span>
-                    </div>
-                  </div>
-                </article>
-              }
-            </div>
-          </section>
+          <section class="group-card"><header class="group-header"><div><p class="eyebrow">Ámbito</p><h2>{{ ambito }}</h2></div><span>{{ productosPorAmbito(ambito).length }} producto(s)</span></header><div class="product-list">
+            @for (p of productosPorAmbito(ambito); track p.id) {
+              <article class="product-row" [class.product-row--done]="contado(p.id)"><div class="product-main"><div class="product-state">{{ contado(p.id) ? '✓' : '·' }}</div><div><div class="product-name-line"><strong>{{ p.nombre }}</strong><span>{{ p.codigo }}</span></div><p>{{ categoriaProducto(p) }}</p>@if (p.descripcion) { <small>{{ p.descripcion }}</small> } @if (tieneStockPrevio(p.id)) { <small>Stock actual: <strong>{{ stockPrevioProducto(p.id) }}</strong> {{ p.unidadMedida }} · Déjalo vacío si no cambió.</small> } @else { <small>Sin stock previo: debes ingresar una cantidad para este producto.</small> }</div></div><div class="count-field"><label [for]="'cantidad-' + p.id">Nueva cantidad</label><div class="count-control"><input [id]="'cantidad-' + p.id" type="number" min="0" step="0.01" inputmode="decimal" [(ngModel)]="cantidades[p.id]" placeholder="Sin cambio"><span>{{ p.unidadMedida }}</span></div></div></article>
+            }
+          </div></section>
         }
       </div>
     }
 
-    <section class="sticky-actions">
-      <div>
-        <strong>{{ contados() }} producto(s) modificados</strong>
-        <span>
-          @if (pendientes() === 0) {
-            Los demás conservarán automáticamente su stock anterior. Ya puedes finalizar.
-          } @else {
-            Hay {{ pendientes() }} producto(s) sin stock previo; registra solo esos antes de finalizar.
-          }
-        </span>
-      </div>
-
-      <div class="action-buttons">
-        <button class="btn btn--secondary" type="button" (click)="guardar()" [disabled]="guardando || finalizando || contados() === 0">
-          {{ guardando ? 'Guardando...' : 'Guardar avance' }}
-        </button>
-        <button class="btn btn--primary" type="button" (click)="solicitarFinalizacion()" [disabled]="finalizando || !productos.length">
-          Finalizar inventario
-        </button>
-      </div>
-    </section>
+    <section class="sticky-actions"><div><strong>{{ contados() }} producto(s) modificados</strong><span>@if (pendientes() === 0) { Los demás conservarán automáticamente su stock anterior. Ya puedes finalizar. } @else { Hay {{ pendientes() }} producto(s) sin stock previo; registra solo esos antes de finalizar. }</span></div><div class="action-buttons"><button class="btn btn--danger-outline" type="button" (click)="solicitarCancelacion()" [disabled]="guardando || finalizando || anulando">Cancelar conteo</button><button class="btn btn--secondary" type="button" (click)="guardar()" [disabled]="guardando || finalizando || anulando || contados() === 0">{{ guardando ? 'Guardando...' : 'Guardar avance' }}</button><button class="btn btn--primary" type="button" (click)="solicitarFinalizacion()" [disabled]="finalizando || anulando || !productos.length">Finalizar inventario</button></div></section>
   }
 
   @if (confirmarFinalizacion) {
-    <div class="modal-backdrop" (click)="cancelarFinalizacion()">
-      <section class="confirm-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-        <div class="confirm-modal__mark">✓</div>
-        <p class="eyebrow">Confirmación final</p>
-        <h2>¿Finalizar el inventario?</h2>
-        <p>
-          Se actualizarán <strong>{{ contados() }} producto(s)</strong>. Los productos que dejaste vacíos conservarán el stock previamente registrado para <strong>{{ plazaNombre }}</strong>.
-        </p>
+    <div class="modal-backdrop" (click)="cancelarFinalizacion()"><section class="confirm-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()"><div class="confirm-modal__mark">✓</div><p class="eyebrow">Confirmación final</p><h2>¿Finalizar el inventario?</h2><p>Se actualizarán <strong>{{ contados() }} producto(s)</strong>. Los productos que dejaste vacíos conservarán el stock previamente registrado para <strong>{{ plazaNombre }}</strong>.</p><div class="confirm-summary"><span>Inventario #{{ inventarioId }}</span><span>{{ productos.length }} productos totales</span></div>@if (finalizando) { <div class="processing-note"><span class="processing-spinner"></span><div><strong>Guardando y cerrando inventario</strong><small>Este proceso puede tardar unos segundos. No cierres la ventana.</small></div></div> }<div class="modal-actions"><button class="btn btn--secondary" type="button" (click)="cancelarFinalizacion()" [disabled]="finalizando">Seguir revisando</button><button class="btn btn--primary" type="button" (click)="finalizar()" [disabled]="finalizando">{{ finalizando ? 'Procesando...' : 'Confirmar y finalizar' }}</button></div></section></div>
+  }
 
-        <div class="confirm-summary">
-          <span>Inventario #{{ inventarioId }}</span>
-          <span>{{ productos.length }} productos totales</span>
-        </div>
-
-        <div class="modal-actions">
-          <button class="btn btn--secondary" type="button" (click)="cancelarFinalizacion()" [disabled]="finalizando">Seguir revisando</button>
-          <button class="btn btn--primary" type="button" (click)="finalizar()" [disabled]="finalizando">
-            {{ finalizando ? 'Finalizando...' : 'Confirmar y finalizar' }}
-          </button>
-        </div>
-      </section>
-    </div>
+  @if (confirmarCancelacion) {
+    <div class="modal-backdrop" (click)="cerrarCancelacion()"><section class="confirm-modal cancel-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()"><div class="confirm-modal__mark confirm-modal__mark--danger">×</div><p class="eyebrow eyebrow--danger">Cancelar conteo</p><h2>¿Cancelar este inventario?</h2><p>El inventario #{{ inventarioId }} quedará registrado como <strong>ANULADO</strong> en el historial y podrás iniciar un nuevo conteo.</p><label class="cancel-reason" for="motivo-cancelacion">Motivo de cancelación<textarea id="motivo-cancelacion" rows="3" [(ngModel)]="motivoCancelacion" maxlength="250" placeholder="Ej.: Conteo iniciado por error"></textarea></label><div class="modal-actions"><button class="btn btn--secondary" type="button" (click)="cerrarCancelacion()" [disabled]="anulando">Volver al conteo</button><button class="btn btn--danger" type="button" (click)="cancelarConteo()" [disabled]="anulando || !motivoCancelacion.trim()">{{ anulando ? 'Cancelando...' : 'Sí, cancelar conteo' }}</button></div></section></div>
   }
 </div>
