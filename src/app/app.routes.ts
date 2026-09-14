@@ -16,8 +16,7 @@ export const routes:Routes=[
   {path:'inventario/nuevo',canActivate:[moduleGuard('INVENTARIO')],loadComponent:()=>import('./features/inventario/pages/nuevo-inventario/nuevo-inventario.component').then(m=>m.NuevoInventarioComponent)},
   {path:'inventario/historial',canActivate:[moduleGuard('INVENTARIO')],loadComponent:()=>import('./features/inventario/pages/historial/historial.component').then(m=>m.HistorialComponent)},
   {path:'inventario/stock',canActivate:[moduleGuard('INVENTARIO')],loadComponent:()=>import('./features/inventario/pages/stock/stock.component').then(m=>m.StockComponent)},
-  {path:'inventario/productos',canActivate:[moduleGuard('ADMIN_PRODUCTOS'),roleGuard('SUPERVISOR','CONTROLADOR')],loadComponent:()=>import('./features/inventario/pages/productos/productos.component').then(m=>m.ProductosComponent)},
-  {path:'chat',canActivate:[moduleGuard('CHAT')],loadComponent:()=>import('./features/chat/chat.component').then(m=>m.ChatComponent)}
+  {path:'inventario/productos',canActivate:[moduleGuard('ADMIN_PRODUCTOS'),roleGuard('SUPERVISOR','CONTROLADOR')],loadComponent:()=>import('./features/inventario/pages/productos/productos.component').then(m=>m.ProductosComponent)}
  ]},
  {path:'**',redirectTo:''}
 ];
