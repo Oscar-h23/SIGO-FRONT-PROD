@@ -34,7 +34,14 @@ export class InventarioApiService {
   }
 
   detalle(id: number) { return this.http.get<InventarioDetalle>(`${this.api}/inventarios/${id}`); }
-  stock() { return this.http.get<StockActual[]>(`${this.api}/inventario/stock`); }
+
+  stock(filtros?: { plazaId?: number | null; buscar?: string | null }) {
+    let params = new HttpParams();
+    if (filtros?.plazaId) params = params.set('plazaId', String(filtros.plazaId));
+    if (filtros?.buscar?.trim()) params = params.set('buscar', filtros.buscar.trim());
+    return this.http.get<StockActual[]>(`${this.api}/inventario/stock`, { params });
+  }
+
   productosAdmin() { return this.http.get<ProductoAdmin[]>(`${this.api}/inventario/productos`); }
   crearProducto(payload: unknown) { return this.http.post<ProductoAdmin>(`${this.api}/inventario/productos`, payload); }
   actualizarProducto(id: number, payload: unknown) { return this.http.put<ProductoAdmin>(`${this.api}/inventario/productos/${id}`, payload); }
