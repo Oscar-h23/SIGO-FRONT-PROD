@@ -13,7 +13,7 @@ export const routes:Routes=[
   {path:'relevos/historial',canActivate:[moduleGuard('RELEVOS')],loadComponent:()=>import('./features/relevos/pages/historial/relevo-historial.component').then(m=>m.RelevoHistorialComponent)},
   {path:'relevos/editar/:id',canActivate:[moduleGuard('RELEVOS'),roleGuard('SUPERVISOR','CONTROLADOR')],loadComponent:()=>import('./features/relevos/pages/editar/relevo-editar.component').then(m=>m.RelevoEditarComponent)},
   {path:'relevos/:id',canActivate:[moduleGuard('RELEVOS')],loadComponent:()=>import('./features/relevos/pages/detalle/relevo-detalle.component').then(m=>m.RelevoDetalleComponent)},
-  {path:'inventario/nuevo',canActivate:[moduleGuard('INVENTARIO')],loadComponent:()=>import('./features/inventario/pages/nuevo-inventario/nuevo-inventario.component').then(m=>m.NuevoInventarioComponent)},
+  {path:'inventario/nuevo',canActivate:[roleGuard('SUPERVISOR','CONTROLADOR','OPERADOR')],loadComponent:()=>import('./features/inventario/pages/nuevo-inventario/nuevo-inventario.component').then(m=>m.NuevoInventarioComponent)},
   {path:'inventario/historial',canActivate:[moduleGuard('INVENTARIO'),roleGuard('SUPERVISOR','CONTROLADOR')],loadComponent:()=>import('./features/inventario/pages/historial/historial.component').then(m=>m.HistorialComponent)},
   {path:'inventario/stock',canActivate:[moduleGuard('INVENTARIO'),roleGuard('SUPERVISOR','CONTROLADOR')],loadComponent:()=>import('./features/inventario/pages/stock/stock.component').then(m=>m.StockComponent)},
   {path:'inventario/productos',canActivate:[moduleGuard('ADMIN_PRODUCTOS'),roleGuard('SUPERVISOR','CONTROLADOR')],loadComponent:()=>import('./features/inventario/pages/productos/productos.component').then(m=>m.ProductosComponent)},
