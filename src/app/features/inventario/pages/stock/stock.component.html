@@ -1,156 +1,197 @@
 <section class="stock-page">
-  <header class="page-header">
-    <div>
-      <p class="eyebrow">Inventario</p>
+  <header class="stock-hero">
+    <div class="hero-copy">
+      <span class="section-kicker">Inventario · Control de existencias</span>
       <h1>Stock actual</h1>
-      <p class="sub">Consulta el último conteo finalizado por producto y plaza, con alertas de stock mínimo.</p>
+      <p>Consulta el último conteo finalizado por producto y plaza. Los productos bajo mínimo aparecen primero para facilitar la revisión.</p>
     </div>
-    <button class="refresh-btn" type="button" (click)="aplicarFiltros()" [disabled]="cargando">
-      {{ cargando ? 'Actualizando...' : 'Actualizar stock' }}
-    </button>
+
+    <div class="hero-actions">
+      <div class="hero-context">
+        <span>Vista actual</span>
+        <strong>{{ esSupervisor() ? 'Todas las plazas' : (auth.usuario()?.plaza || 'Plaza asignada') }}</strong>
+      </div>
+      <button class="btn btn-primary" type="button" (click)="aplicarFiltros()" [disabled]="cargando">
+        {{ cargando ? 'Actualizando...' : 'Actualizar' }}
+      </button>
+    </div>
   </header>
 
-  <section class="summary-grid" aria-label="Resumen de stock">
-    <article class="summary-card">
-      <span class="summary-label">Registros</span>
-      <strong>{{ totalProductos() }}</strong>
-      <small>Productos con stock registrado</small>
+  <section class="kpi-grid" aria-label="Resumen de stock">
+    <article class="kpi-card kpi-card--main">
+      <div class="kpi-icon">ST</div>
+      <div>
+        <span class="kpi-label">Registros visibles</span>
+        <strong>{{ totalProductos() }}</strong>
+        <small>Productos con stock registrado</small>
+      </div>
     </article>
-    <article class="summary-card alert-card">
-      <span class="summary-label">Bajo mínimo</span>
-      <strong>{{ totalBajoMinimo() }}</strong>
-      <small>Requieren revisión</small>
+
+    <article class="kpi-card" [class.kpi-card--danger]="totalBajoMinimo() > 0">
+      <div class="kpi-icon">BM</div>
+      <div>
+        <span class="kpi-label">Bajo mínimo</span>
+        <strong>{{ totalBajoMinimo() }}</strong>
+        <small>{{ totalBajoMinimo() === 1 ? 'Producto por revisar' : 'Productos por revisar' }}</small>
+      </div>
     </article>
-    <article class="summary-card">
-      <span class="summary-label">Stock adecuado</span>
-      <strong>{{ totalSaludable() }}</strong>
-      <small>Dentro del nivel esperado</small>
+
+    <article class="kpi-card">
+      <div class="kpi-icon">OK</div>
+      <div>
+        <span class="kpi-label">Stock adecuado</span>
+        <strong>{{ totalSaludable() }}</strong>
+        <small>Sin alerta de mínimo</small>
+      </div>
     </article>
-    <article class="summary-card">
-      <span class="summary-label">Plazas visibles</span>
-      <strong>{{ totalPlazas() }}</strong>
-      <small>{{ esSupervisor() ? 'Según filtros aplicados' : (auth.usuario()?.plaza || 'Plaza asignada') }}</small>
+
+    <article class="kpi-card">
+      <div class="kpi-icon">PL</div>
+      <div>
+        <span class="kpi-label">Plazas visibles</span>
+        <strong>{{ totalPlazas() }}</strong>
+        <small>{{ esSupervisor() ? 'Según los filtros' : (auth.usuario()?.plaza || 'Plaza asignada') }}</small>
+      </div>
     </article>
   </section>
 
-  <section class="filters-panel">
-    <div class="filter search-filter">
-      <label for="stock-search">Buscar producto</label>
-      <input
-        id="stock-search"
-        type="search"
-        [(ngModel)]="busqueda"
-        (keyup.enter)="aplicarFiltros()"
-        placeholder="Nombre del producto"
-        autocomplete="off">
+  <section class="control-panel">
+    <div class="control-panel__head">
+      <div>
+        <span class="section-kicker">Filtros</span>
+        <h2>Buscar en stock</h2>
+      </div>
+      <button class="link-button" type="button" (click)="limpiarFiltros()" [disabled]="cargando">Limpiar filtros</button>
     </div>
 
-    @if (esSupervisor()) {
-      <div class="filter">
-        <label for="stock-plaza">Plaza</label>
-        <select id="stock-plaza" [(ngModel)]="plazaId" (change)="aplicarFiltros()">
-          <option [ngValue]="null">Todas las plazas</option>
-          @for (plaza of plazas; track plaza.id) {
-            <option [ngValue]="plaza.id">{{ plaza.codigo || plaza.nombre }}</option>
-          }
+    <div class="filters-grid">
+      <div class="field field--search">
+        <label for="stock-search">Producto</label>
+        <div class="search-input">
+          <input
+            id="stock-search"
+            type="search"
+            [(ngModel)]="busqueda"
+            (keyup.enter)="aplicarFiltros()"
+            placeholder="Ej. alcohol, conos, papel..."
+            autocomplete="off">
+          <button type="button" (click)="aplicarFiltros()" [disabled]="cargando">Buscar</button>
+        </div>
+      </div>
+
+      @if (esSupervisor()) {
+        <div class="field">
+          <label for="stock-plaza">Plaza</label>
+          <select id="stock-plaza" [(ngModel)]="plazaId" (change)="aplicarFiltros()">
+            <option [ngValue]="null">Todas las plazas</option>
+            @for (plaza of plazas; track plaza.id) {
+              <option [ngValue]="plaza.id">{{ plaza.codigo || plaza.nombre }}</option>
+            }
+          </select>
+        </div>
+      } @else {
+        <div class="field">
+          <label>Plaza</label>
+          <div class="readonly-field">{{ auth.usuario()?.plaza || 'Sin plaza asignada' }}</div>
+        </div>
+      }
+
+      <div class="field">
+        <label for="stock-status">Estado</label>
+        <select id="stock-status" [(ngModel)]="estado">
+          <option value="TODOS">Todos los estados</option>
+          <option value="BAJO">Bajo mínimo</option>
+          <option value="OK">Stock adecuado</option>
         </select>
       </div>
-    } @else {
-      <div class="filter fixed-filter">
-        <label>Plaza</label>
-        <div class="fixed-value">{{ auth.usuario()?.plaza || 'Sin plaza asignada' }}</div>
+
+      <div class="field field--button">
+        <label>&nbsp;</label>
+        <button class="btn btn-secondary" type="button" (click)="aplicarFiltros()" [disabled]="cargando">Aplicar filtros</button>
       </div>
-    }
-
-    <div class="filter">
-      <label for="stock-status">Estado</label>
-      <select id="stock-status" [(ngModel)]="estado">
-        <option value="TODOS">Todos</option>
-        <option value="BAJO">Bajo mínimo</option>
-        <option value="OK">Stock adecuado</option>
-      </select>
-    </div>
-
-    <div class="filter-actions">
-      <button class="primary-btn" type="button" (click)="aplicarFiltros()" [disabled]="cargando">Buscar</button>
-      <button class="secondary-btn" type="button" (click)="limpiarFiltros()" [disabled]="cargando">Limpiar</button>
     </div>
   </section>
 
   @if (error) {
-    <div class="message error-message">{{ error }}</div>
+    <div class="feedback feedback--error">
+      <strong>No se pudo cargar el stock</strong>
+      <span>{{ error }}</span>
+    </div>
   }
 
   @if (cargando) {
-    <div class="loading-state">
-      <div class="spinner"></div>
-      <strong>Cargando stock...</strong>
+    <section class="state-panel">
+      <div class="loader"></div>
+      <strong>Cargando stock actual</strong>
       <span>Consultando el último inventario finalizado.</span>
-    </div>
+    </section>
   } @else {
-    <div class="results-head">
-      <div>
-        <strong>{{ itemsVisibles().length }}</strong>
-        <span>{{ itemsVisibles().length === 1 ? 'resultado' : 'resultados' }}</span>
-      </div>
-      @if (totalBajoMinimo() > 0) {
-        <span class="warning-copy">{{ totalBajoMinimo() }} {{ totalBajoMinimo() === 1 ? 'producto requiere' : 'productos requieren' }} atención</span>
-      }
-    </div>
+    <section class="results-section">
+      <header class="results-header">
+        <div>
+          <span class="section-kicker">Resultados</span>
+          <h2>{{ itemsVisibles().length }} {{ itemsVisibles().length === 1 ? 'producto' : 'productos' }}</h2>
+        </div>
+        @if (totalBajoMinimo() > 0) {
+          <div class="alert-summary">
+            <strong>{{ totalBajoMinimo() }}</strong>
+            <span>{{ totalBajoMinimo() === 1 ? 'alerta activa' : 'alertas activas' }}</span>
+          </div>
+        }
+      </header>
 
-    @if (itemsVisibles().length === 0) {
-      <div class="empty-state">
-        <div class="empty-mark">0</div>
-        <h2>No hay stock para mostrar</h2>
-        <p>No se encontraron registros con los filtros seleccionados.</p>
-        <button type="button" class="secondary-btn" (click)="limpiarFiltros()">Restablecer filtros</button>
-      </div>
-    } @else {
-      <div class="stock-grid">
-        @for (s of itemsVisibles(); track trackStock($index, s)) {
-          <article class="stock-card" [class.low]="s.bajoMinimo">
-            <div class="card-top">
-              <div class="product-info">
-                <span class="plaza-chip">{{ s.plaza }}</span>
-                <h2>{{ s.producto }}</h2>
-                <span class="inventory-ref">Inventario #{{ s.inventarioId }}</span>
+      @if (itemsVisibles().length === 0) {
+        <div class="state-panel state-panel--empty">
+          <div class="empty-icon">0</div>
+          <strong>No hay registros para mostrar</strong>
+          <span>No encontramos stock con los filtros seleccionados.</span>
+          <button class="btn btn-secondary" type="button" (click)="limpiarFiltros()">Restablecer filtros</button>
+        </div>
+      } @else {
+        <div class="stock-list">
+          @for (s of itemsVisibles(); track trackStock($index, s)) {
+            <article class="stock-item" [class.stock-item--low]="s.bajoMinimo">
+              <div class="stock-item__identity">
+                <div class="identity-topline">
+                  <span class="plaza-pill">{{ s.plaza }}</span>
+                  <span class="inventory-id">#{{ s.inventarioId }}</span>
+                </div>
+                <h3>{{ s.producto }}</h3>
+                <span class="updated-copy">Actualizado {{ formatearFecha(s.actualizadoEn) }}</span>
               </div>
-              <span class="status-badge" [class.status-low]="s.bajoMinimo" [class.status-ok]="!s.bajoMinimo">
-                {{ s.bajoMinimo ? 'Bajo mínimo' : 'Stock adecuado' }}
-              </span>
-            </div>
 
-            <div class="quantity-block">
-              <div>
-                <span class="quantity-label">Cantidad actual</span>
-                <div class="quantity-value">
+              <div class="stock-item__quantity">
+                <span class="data-label">Stock actual</span>
+                <div class="main-quantity">
                   <strong>{{ s.cantidadActual }}</strong>
                   <span>{{ s.unidadMedida }}</span>
                 </div>
               </div>
-              <div class="minimum-block">
-                <span>Mínimo definido</span>
+
+              <div class="stock-item__minimum">
+                <span class="data-label">Stock mínimo</span>
                 <strong>{{ s.stockMinimo }} {{ s.unidadMedida }}</strong>
+                <div class="level-meter">
+                  <div class="level-meter__head">
+                    <span>Nivel</span>
+                    <strong>{{ porcentajeStock(s) | number:'1.0-0' }}%</strong>
+                  </div>
+                  <div class="meter-track">
+                    <div class="meter-fill" [class.meter-fill--low]="s.bajoMinimo" [style.width.%]="porcentajeStock(s)"></div>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div class="level-block">
-              <div class="level-copy">
-                <span>Nivel respecto al mínimo</span>
-                <strong>{{ porcentajeStock(s) | number:'1.0-0' }}%</strong>
+              <div class="stock-item__status">
+                <span class="status-pill" [class.status-pill--low]="s.bajoMinimo" [class.status-pill--ok]="!s.bajoMinimo">
+                  {{ s.bajoMinimo ? 'Bajo mínimo' : 'Stock adecuado' }}
+                </span>
+                <small>{{ s.bajoMinimo ? 'Requiere revisión' : 'Sin observaciones' }}</small>
               </div>
-              <div class="progress" [attr.aria-label]="'Nivel de stock de ' + s.producto">
-                <div class="progress-bar" [class.progress-low]="s.bajoMinimo" [style.width.%]="porcentajeStock(s)"></div>
-              </div>
-            </div>
-
-            <footer class="card-footer">
-              <span>Última actualización</span>
-              <strong>{{ formatearFecha(s.actualizadoEn) }}</strong>
-            </footer>
-          </article>
-        }
-      </div>
-    }
+            </article>
+          }
+        </div>
+      }
+    </section>
   }
 </section>
