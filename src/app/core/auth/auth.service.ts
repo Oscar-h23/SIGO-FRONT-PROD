@@ -61,6 +61,13 @@ export class AuthService {
     }catch{return null;}
   }
   private normalizarUsuario(usuario:UsuarioSesion):UsuarioSesion{
-    return {...usuario,trabajadorId:usuario.trabajadorId ?? usuario.id};
+    const modulosServidor=Array.isArray(usuario.modulos)?usuario.modulos:[];
+    const minimosPorRol:Record<RolSistema,ModuloSigo[]>={
+      SUPERVISOR:['DASHBOARD','RELEVOS','ASISTENCIA','INVENTARIO','ADMIN_PRODUCTOS','TRABAJADORES','CHAT'],
+      CONTROLADOR:['DASHBOARD','RELEVOS','ASISTENCIA','INVENTARIO','ADMIN_PRODUCTOS','CHAT'],
+      OPERADOR:['RELEVOS','INVENTARIO']
+    };
+    const modulos=[...new Set<ModuloSigo>([...modulosServidor,...minimosPorRol[usuario.rol]])];
+    return {...usuario,trabajadorId:usuario.trabajadorId ?? usuario.id,modulos};
   }
 }
