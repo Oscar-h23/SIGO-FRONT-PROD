@@ -1,36 +1,217 @@
-<h1>Historial de inventarios</h1>
-@if (cargando) { <p>Cargando...</p> }
+<div class="history-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">SIGO · Inventario</p>
+      <h1>Historial de inventarios</h1>
+      <p class="subtitle">Consulta inventarios anteriores, revisa sus productos y exporta el detalle en PDF.</p>
+    </div>
 
-<div class="table">
-  <div class="row header">
-    <span>ID</span><span>Plaza</span><span>Responsable</span><span>Rol</span><span>Estado</span><span></span>
-  </div>
-  @for (i of items; track i.id) {
-    <div class="row">
-      <span>#{{ i.id }}</span>
-      <span>{{ i.plaza }}</span>
-      <span>{{ i.responsable }}</span>
-      <span>{{ i.rol }}</span>
-      <span>{{ i.estado }}</span>
-      <button (click)="ver(i.id)">Ver</button>
+    <div class="header-summary">
+      <span>Registros encontrados</span>
+      <strong>{{ totalElementos }}</strong>
+    </div>
+  </header>
+
+  @if (error) {
+    <div class="alert alert--error">{{ error }}</div>
+  }
+
+  <section class="filters-card">
+    <div class="filter-field filter-field--search">
+      <label for="historial-busqueda">Buscar en resultados</label>
+      <input
+        id="historial-busqueda"
+        type="search"
+        [(ngModel)]="busqueda"
+        placeholder="ID, plaza, responsable, rol o estado">
+    </div>
+
+    @if (esSupervisor) {
+      <div class="filter-field">
+        <label for="historial-plaza">Plaza</label>
+        <select id="historial-plaza" [(ngModel)]="plazaId">
+          <option [ngValue]="null">Todas</option>
+          @for (plaza of plazas; track plaza.id) {
+            <option [ngValue]="plaza.id">{{ plaza.codigo || plaza.nombre }}</option>
+          }
+        </select>
+      </div>
+    } @else {
+      <div class="filter-field">
+        <label>Plaza</label>
+        <div class="locked-value">{{ usuario?.plaza || 'Plaza asignada' }}</div>
+      </div>
+    }
+
+    <div class="filter-field">
+      <label for="historial-estado">Estado</label>
+      <select id="historial-estado" [(ngModel)]="estado">
+        <option value="">Todos</option>
+        <option value="EN_PROCESO">En proceso</option>
+        <option value="FINALIZADO">Finalizado</option>
+        <option value="ANULADO">Anulado</option>
+      </select>
+    </div>
+
+    <div class="filter-field">
+      <label for="historial-rol">Rol</label>
+      <select id="historial-rol" [(ngModel)]="rol">
+        <option value="">Todos</option>
+        <option value="SUPERVISOR">Supervisor</option>
+        <option value="CONTROLADOR">Controlador</option>
+        <option value="AGENTE">Agente</option>
+      </select>
+    </div>
+
+    <div class="filter-field">
+      <label for="historial-desde">Desde</label>
+      <input id="historial-desde" type="date" [(ngModel)]="desde">
+    </div>
+
+    <div class="filter-field">
+      <label for="historial-hasta">Hasta</label>
+      <input id="historial-hasta" type="date" [(ngModel)]="hasta">
+    </div>
+
+    <div class="filter-actions">
+      <button class="btn btn--secondary" type="button" (click)="limpiarFiltros()" [disabled]="cargando">Limpiar</button>
+      <button class="btn btn--primary" type="button" (click)="aplicarFiltros()" [disabled]="cargando">
+        {{ cargando ? 'Buscando...' : 'Aplicar filtros' }}
+      </button>
+    </div>
+  </section>
+
+  @if (cargando) {
+    <section class="loading-list">
+      @for (_ of [1,2,3]; track $index) {
+        <div class="skeleton-card">
+          <div class="skeleton skeleton--title"></div>
+          <div class="skeleton"></div>
+          <div class="skeleton skeleton--short"></div>
+        </div>
+      }
+    </section>
+  } @else if (!itemsVisibles().length) {
+    <section class="empty-card">
+      <h2>No hay inventarios para mostrar</h2>
+      <p>Prueba cambiando los filtros o realiza un nuevo inventario.</p>
+    </section>
+  } @else {
+    <section class="history-list">
+      @for (i of itemsVisibles(); track i.id) {
+        <article class="history-card">
+          <div class="history-card__main">
+            <div class="inventory-number">
+              <span>Inventario</span>
+              <strong>#{{ i.id }}</strong>
+            </div>
+
+            <div class="inventory-data">
+              <div class="title-row">
+                <h2>{{ i.plaza }}</h2>
+                <span class="status" [class.status--done]="i.estado === 'FINALIZADO'" [class.status--open]="i.estado === 'EN_PROCESO'" [class.status--cancelled]="i.estado === 'ANULADO'">
+                  {{ estadoTexto(i.estado) }}
+                </span>
+              </div>
+              <p>{{ i.responsable }} · {{ i.rol }}</p>
+              <div class="meta-row">
+                <span>Inicio: {{ formatearFecha(i.fechaInicio) }}</span>
+                @if (i.fechaFinalizacion) {
+                  <span>Finalizado: {{ formatearFecha(i.fechaFinalizacion) }}</span>
+                }
+                <span>{{ i.productosRegistrados }} producto(s)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="history-card__actions">
+            <button class="btn btn--secondary" type="button" (click)="ver(i.id)" [disabled]="cargandoDetalle">Ver detalle</button>
+            <button class="btn btn--primary" type="button" (click)="exportarPdf(i)">PDF</button>
+          </div>
+        </article>
+      }
+    </section>
+
+    @if (totalPaginas > 1) {
+      <nav class="pagination" aria-label="Paginación del historial">
+        <button type="button" (click)="anterior()" [disabled]="pagina === 0 || cargando">Anterior</button>
+        <span>Página {{ pagina + 1 }} de {{ totalPaginas }}</span>
+        <button type="button" (click)="siguiente()" [disabled]="pagina + 1 >= totalPaginas || cargando">Siguiente</button>
+      </nav>
+    }
+  }
+
+  @if (detalle || cargandoDetalle) {
+    <div class="modal-backdrop" (click)="cerrarDetalle()">
+      <section class="detail-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+        @if (cargandoDetalle && !detalle) {
+          <div class="detail-loading">
+            <div class="skeleton skeleton--title"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+          </div>
+        } @else if (detalle) {
+          <header class="modal-head">
+            <div>
+              <p class="eyebrow">Detalle del inventario</p>
+              <div class="title-row">
+                <h2>Inventario #{{ detalle.id }}</h2>
+                <span class="status" [class.status--done]="detalle.estado === 'FINALIZADO'" [class.status--open]="detalle.estado === 'EN_PROCESO'" [class.status--cancelled]="detalle.estado === 'ANULADO'">
+                  {{ estadoTexto(detalle.estado) }}
+                </span>
+              </div>
+            </div>
+            <button class="close-button" type="button" (click)="cerrarDetalle()">Cerrar</button>
+          </header>
+
+          <div class="detail-summary">
+            <article><span>Plaza</span><strong>{{ detalle.plaza }}</strong></article>
+            <article><span>Responsable</span><strong>{{ detalle.responsable }}</strong></article>
+            <article><span>Rol</span><strong>{{ detalle.rol }}</strong></article>
+            <article><span>Inicio</span><strong>{{ formatearFecha(detalle.fechaInicio) }}</strong></article>
+            <article><span>Finalización</span><strong>{{ formatearFecha(detalle.fechaFinalizacion) }}</strong></article>
+            <article><span>Productos</span><strong>{{ detalle.productos.length }}</strong></article>
+          </div>
+
+          @if (detalle.observacion) {
+            <div class="observation-card">
+              <span>Observación</span>
+              <p>{{ detalle.observacion }}</p>
+            </div>
+          }
+
+          @if (detalle.motivoAnulacion) {
+            <div class="observation-card observation-card--warning">
+              <span>Motivo de anulación</span>
+              <p>{{ detalle.motivoAnulacion }}</p>
+            </div>
+          }
+
+          <div class="products-head">
+            <div>
+              <p class="eyebrow">Conteo registrado</p>
+              <h3>Productos</h3>
+            </div>
+            <button class="btn btn--primary" type="button" (click)="exportarPdf()">Exportar PDF</button>
+          </div>
+
+          @if (!detalle.productos.length) {
+            <div class="empty-products">Este inventario no tiene productos registrados.</div>
+          } @else {
+            <div class="detail-products">
+              @for (p of detalle.productos; track p.productoId) {
+                <article class="detail-product">
+                  <div>
+                    <strong>{{ p.nombre }}</strong>
+                    <span>{{ p.categoria || 'Sin categoría' }} · {{ p.ambito || 'General' }}</span>
+                  </div>
+                  <strong>{{ formatearCantidad(p.cantidad) }} {{ p.unidad }}</strong>
+                </article>
+              }
+            </div>
+          }
+        }
+      </section>
     </div>
   }
 </div>
-
-@if (detalle) {
-  <div class="modal-backdrop" (click)="detalle=null">
-    <div class="modal" (click)="$event.stopPropagation()">
-      <div class="modal-head">
-        <h2>Inventario #{{ detalle.id }}</h2>
-        <button (click)="detalle=null">Cerrar</button>
-      </div>
-      <p><strong>Plaza:</strong> {{ detalle.plaza }}</p>
-      <p><strong>Responsable:</strong> {{ detalle.responsable }}</p>
-      <p><strong>Estado:</strong> {{ detalle.estado }}</p>
-      <div class="detail-row" *ngFor="let p of detalle.productos">
-        <span>{{ p.nombre }}</span>
-        <strong>{{ p.cantidad }} {{ p.unidad }}</strong>
-      </div>
-    </div>
-  </div>
-}
