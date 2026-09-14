@@ -82,6 +82,16 @@
           <span class="nav-label">Administrar productos</span>
         </a>
       }
+
+      @if(has('CHAT')){
+        <div class="group">ASISTENTE</div>
+        <a routerLink="/chat" routerLinkActive="active" (click)="close()" data-tooltip="Asistente SIGO" aria-label="Asistente SIGO">
+          <span class="nav-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16v13H8l-4 4V4Zm3 4v2h10V8H7Zm0 4v2h7v-2H7Z"/></svg>
+          </span>
+          <span class="nav-label">Asistente SIGO</span>
+        </a>
+      }
     </nav>
 
     <button class="logout" type="button" (click)="logout()" data-tooltip="Cerrar sesión" aria-label="Cerrar sesión">
