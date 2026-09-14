@@ -22,6 +22,7 @@ export class NuevoInventarioComponent implements OnInit {
   inventario: InventarioResumen | null = null;
   productos: ProductoInventario[] = [];
   cantidades: Record<number, number | null> = {};
+  stockPrevio: Record<number, number> = {};
   busqueda = '';
   mensaje = '';
   error = '';
@@ -48,7 +49,7 @@ export class NuevoInventarioComponent implements OnInit {
     try {
       const inv = await firstValueFrom(this.api.iniciarInventario());
       await this.cargarInventario(inv);
-      this.mensaje = 'Inventario iniciado. Registra la cantidad física de todos los productos.';
+      this.mensaje = 'Inventario iniciado. Solo registra los productos cuyo stock haya cambiado.';
     } catch (e: any) {
       const texto = this.extraerError(e);
       if (e?.status === 409 || texto.includes('EN_PROCESO')) {
@@ -72,7 +73,7 @@ export class NuevoInventarioComponent implements OnInit {
 
     try {
       await this.guardarInterno();
-      this.mensaje = `Avance guardado: ${this.contados()} de ${this.productos.length} productos registrados.`;
+      this.mensaje = `Avance guardado: ${this.contados()} producto(s) modificados.`;
     } catch (e: any) {
       this.error = this.extraerError(e);
     } finally {
@@ -86,7 +87,7 @@ export class NuevoInventarioComponent implements OnInit {
     if (!this.inventarioId) return;
 
     if (!this.todosContados()) {
-      this.error = `Faltan ${this.pendientes()} producto(s) por contar. Completa todas las cantidades antes de finalizar.`;
+      this.error = `Hay ${this.pendientes()} producto(s) sin cantidad ingresada y sin stock previo. Registra únicamente esos productos antes de finalizar.`;
       return;
     }
 
@@ -104,13 +105,14 @@ export class NuevoInventarioComponent implements OnInit {
     this.refrescarVista();
 
     try {
-      await this.guardarInterno();
+      await this.guardarParaFinalizar();
       const cerrado = await firstValueFrom(this.api.finalizar(this.inventarioId));
       this.confirmarFinalizacion = false;
       this.mensaje = `Inventario #${cerrado.id} finalizado correctamente.`;
       this.inventario = null;
       this.productos = [];
       this.cantidades = {};
+      this.stockPrevio = {};
       this.busqueda = '';
     } catch (e: any) {
       this.error = this.extraerError(e);
@@ -147,17 +149,34 @@ export class NuevoInventarioComponent implements OnInit {
     return this.cantidades[productoId] !== null && this.cantidades[productoId] !== undefined;
   }
 
+  tieneStockPrevio(productoId: number): boolean {
+    return Object.prototype.hasOwnProperty.call(this.stockPrevio, productoId);
+  }
+
+  stockPrevioProducto(productoId: number): number | null {
+    return this.tieneStockPrevio(productoId) ? this.stockPrevio[productoId] : null;
+  }
+
+  cantidadEfectiva(productoId: number): number | null {
+    if (this.contado(productoId)) return Number(this.cantidades[productoId]);
+    return this.stockPrevioProducto(productoId);
+  }
+
   contados(): number {
     return this.productos.filter(p => this.contado(p.id)).length;
   }
 
+  conStockDefinido(): number {
+    return this.productos.filter(p => this.cantidadEfectiva(p.id) !== null).length;
+  }
+
   pendientes(): number {
-    return Math.max(this.productos.length - this.contados(), 0);
+    return Math.max(this.productos.length - this.conStockDefinido(), 0);
   }
 
   porcentaje(): number {
     if (!this.productos.length) return 0;
-    return Math.round((this.contados() / this.productos.length) * 100);
+    return Math.round((this.conStockDefinido() / this.productos.length) * 100);
   }
 
   todosContados(): boolean {
@@ -197,7 +216,17 @@ export class NuevoInventarioComponent implements OnInit {
     this.inventario = inv;
     this.productos = await firstValueFrom(this.api.productosPermitidos(inv.id));
     this.cantidades = {};
+    this.stockPrevio = {};
     for (const producto of this.productos) this.cantidades[producto.id] = null;
+
+    try {
+      const stock = await firstValueFrom(this.api.stock({ plazaId: inv.plazaId }));
+      for (const item of stock ?? []) {
+        this.stockPrevio[item.productoId] = Number(item.cantidadActual);
+      }
+    } catch {
+      // Si todavía no existe stock histórico, solo se exigirán cantidades para esos productos.
+    }
 
     if (recuperarCantidades) {
       try {
@@ -213,18 +242,40 @@ export class NuevoInventarioComponent implements OnInit {
     this.refrescarVista();
   }
 
-  private async guardarInterno(): Promise<InventarioDetalle> {
-    if (!this.inventarioId) throw new Error('No existe un inventario activo.');
-
-    const productos = this.productos
+  private productosIngresados(): { productoId: number; cantidad: number }[] {
+    return this.productos
       .filter(p => this.contado(p.id))
       .map(p => ({ productoId: p.id, cantidad: Number(this.cantidades[p.id]) }));
+  }
 
-    if (!productos.length) throw new Error('Registra al menos una cantidad antes de guardar.');
+  private validarCantidades(productos: { productoId: number; cantidad: number }[]): void {
     if (productos.some(p => !Number.isFinite(p.cantidad) || p.cantidad < 0)) {
       throw new Error('Las cantidades deben ser números iguales o mayores a cero.');
     }
+  }
 
+  private async guardarInterno(): Promise<InventarioDetalle> {
+    if (!this.inventarioId) throw new Error('No existe un inventario activo.');
+
+    const productos = this.productosIngresados();
+    if (!productos.length) throw new Error('Registra al menos una cantidad antes de guardar el avance.');
+    this.validarCantidades(productos);
+
+    return await firstValueFrom(this.api.guardarDetalle(this.inventarioId, productos));
+  }
+
+  private async guardarParaFinalizar(): Promise<InventarioDetalle> {
+    if (!this.inventarioId) throw new Error('No existe un inventario activo.');
+
+    const productos = this.productos.map(p => {
+      const cantidad = this.cantidadEfectiva(p.id);
+      if (cantidad === null) {
+        throw new Error(`El producto ${p.nombre} no tiene stock previo. Registra una cantidad antes de finalizar.`);
+      }
+      return { productoId: p.id, cantidad: Number(cantidad) };
+    });
+
+    this.validarCantidades(productos);
     return await firstValueFrom(this.api.guardarDetalle(this.inventarioId, productos));
   }
 
