@@ -13,9 +13,7 @@
     <nav>
       @if(has('DASHBOARD')){
         <a routerLink="/dashboard" routerLinkActive="active" (click)="close()" data-tooltip="Dashboard" aria-label="Dashboard">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M4 13h6V4H4v9Zm0 7h6v-5H4v5Zm10 0h6v-9h-6v9Zm0-16v5h6V4h-6Z"/></svg>
-          </span>
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 13h6V4H4v9Zm0 7h6v-5H4v5Zm10 0h6v-9h-6v9Zm0-16v5h6V4h-6Z"/></svg></span>
           <span class="nav-label">Dashboard</span>
         </a>
       }
@@ -23,15 +21,11 @@
       @if(has('RELEVOS')){
         <div class="group">RELEVOS</div>
         <a routerLink="/relevos/nuevo" routerLinkActive="active" (click)="close()" data-tooltip="Nuevo relevo" aria-label="Nuevo relevo">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 8.5 12h-2.2a7 7 0 1 1-1.45-7.45L14 10.4h7V3.4l-2.7 2.7A8.96 8.96 0 0 0 12 3Z"/></svg>
-          </span>
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 8.5 12h-2.2a7 7 0 1 1-1.45-7.45L14 10.4h7V3.4l-2.7 2.7A8.96 8.96 0 0 0 12 3Z"/></svg></span>
           <span class="nav-label">Nuevo relevo</span>
         </a>
         <a routerLink="/relevos/historial" routerLinkActive="active" (click)="close()" data-tooltip="Historial de relevos" aria-label="Historial de relevos">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M12 4a8 8 0 1 1-7.45 5H2l3.5-3.5L9 9H6.6A6 6 0 1 0 12 6v4.6l3.2 1.9-1 1.7L10 11.7V4h2Z"/></svg>
-          </span>
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4a8 8 0 1 1-7.45 5H2l3.5-3.5L9 9H6.6A6 6 0 1 0 12 6v4.6l3.2 1.9-1 1.7L10 11.7V4h2Z"/></svg></span>
           <span class="nav-label">Historial de relevos</span>
         </a>
       }
@@ -39,15 +33,11 @@
       @if(has('ASISTENCIA')){
         <div class="group">ASISTENCIA</div>
         <a routerLink="/asistencia/registrar" routerLinkActive="active" (click)="close()" data-tooltip="Registrar asistencia" aria-label="Registrar asistencia">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4.4 0-7 2.2-7 5v2h10.3a7.2 7.2 0 0 1-.3-2c0-1.9.8-3.7 2.1-5H9Zm9 0v3h-3v2h3v3h2v-3h3v-2h-3v-3h-2Z"/></svg>
-          </span>
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4.4 0-7 2.2-7 5v2h10.3a7.2 7.2 0 0 1-.3-2c0-1.9.8-3.7 2.1-5H9Zm9 0v3h-3v2h3v3h2v-3h3v-2h-3v-3h-2Z"/></svg></span>
           <span class="nav-label">Registrar asistencia</span>
         </a>
         <a routerLink="/asistencia/historial" routerLinkActive="active" (click)="close()" data-tooltip="Historial de asistencia" aria-label="Historial de asistencia">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6V2Zm8 2v5h4.2L14 4ZM9 13v2h8v-2H9Zm0 4v2h8v-2H9Z"/></svg>
-          </span>
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6V2Zm8 2v5h4.2L14 4ZM9 13v2h8v-2H9Zm0 4v2h8v-2H9Z"/></svg></span>
           <span class="nav-label">Historial de asistencia</span>
         </a>
       }
@@ -55,49 +45,29 @@
       @if(has('INVENTARIO')){
         <div class="group">INVENTARIO</div>
         <a routerLink="/inventario/nuevo" routerLinkActive="active" (click)="close()" data-tooltip="Nuevo inventario" aria-label="Nuevo inventario">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="m12 2 9 4.5v11L12 22l-9-4.5v-11L12 2Zm0 2.2L6.4 7 12 9.8 17.6 7 12 4.2ZM5 8.6v7.7l6 3v-7.7l-6-3Zm8 10.7 6-3V8.6l-6 3v7.7Z"/></svg>
-          </span>
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 2 9 4.5v11L12 22l-9-4.5v-11L12 2Zm0 2.2L6.4 7 12 9.8 17.6 7 12 4.2ZM5 8.6v7.7l6 3v-7.7l-6-3Zm8 10.7 6-3V8.6l-6 3v7.7Z"/></svg></span>
           <span class="nav-label">Nuevo inventario</span>
         </a>
         <a routerLink="/inventario/historial" routerLinkActive="active" (click)="close()" data-tooltip="Historial de inventario" aria-label="Historial de inventario">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M4 3h16v4H4V3Zm1 6h14v12H5V9Zm3 3v2h8v-2H8Zm0 4v2h5v-2H8Z"/></svg>
-          </span>
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 3h16v4H4V3Zm1 6h14v12H5V9Zm3 3v2h8v-2H8Zm0 4v2h5v-2H8Z"/></svg></span>
           <span class="nav-label">Historial</span>
         </a>
         <a routerLink="/inventario/stock" routerLinkActive="active" (click)="close()" data-tooltip="Stock" aria-label="Stock">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M3 5h18v4H3V5Zm1 6h7v8H4v-8Zm9 0h7v3h-7v-3Zm0 5h7v3h-7v-3Z"/></svg>
-          </span>
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 5h18v4H3V5Zm1 6h7v8H4v-8Zm9 0h7v3h-7v-3Zm0 5h7v3h-7v-3Z"/></svg></span>
           <span class="nav-label">Stock</span>
         </a>
       }
 
       @if(has('ADMIN_PRODUCTOS')){
         <a routerLink="/inventario/productos" routerLinkActive="active" (click)="close()" data-tooltip="Administrar productos" aria-label="Administrar productos">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M4 4h16v5H4V4Zm0 7h10v9H4v-9Zm12 0h4v4h-4v-4Zm0 6h4v3h-4v-3Z"/></svg>
-          </span>
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h16v5H4V4Zm0 7h10v9H4v-9Zm12 0h4v4h-4v-4Zm0 6h4v3h-4v-3Z"/></svg></span>
           <span class="nav-label">Administrar productos</span>
-        </a>
-      }
-
-      @if(has('CHAT')){
-        <div class="group">ASISTENTE</div>
-        <a routerLink="/chat" routerLinkActive="active" (click)="close()" data-tooltip="Asistente SIGO" aria-label="Asistente SIGO">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M4 4h16v13H8l-4 4V4Zm3 4v2h10V8H7Zm0 4v2h7v-2H7Z"/></svg>
-          </span>
-          <span class="nav-label">Asistente SIGO</span>
         </a>
       }
     </nav>
 
     <button class="logout" type="button" (click)="logout()" data-tooltip="Cerrar sesión" aria-label="Cerrar sesión">
-      <span class="nav-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M10 3H4v18h6v-2H6V5h4V3Zm5.6 4.4L14.2 8.8l2.2 2.2H9v2h7.4l-2.2 2.2 1.4 1.4L20.2 12l-4.6-4.6Z"/></svg>
-      </span>
+      <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 3H4v18h6v-2H6V5h4V3Zm5.6 4.4L14.2 8.8l2.2 2.2H9v2h7.4l-2.2 2.2 1.4 1.4L20.2 12l-4.6-4.6Z"/></svg></span>
       <span class="nav-label">Cerrar sesión</span>
     </button>
   </aside>
@@ -118,9 +88,7 @@
       </div>
 
       <div class="plaza-card" aria-label="Plaza asignada">
-        <span class="plaza-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 4a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"/></svg>
-        </span>
+        <span class="plaza-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 4a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"/></svg></span>
         <div>
           <small>Plaza</small>
           <strong>{{auth.usuario()?.plaza || 'Sin asignar'}}</strong>
@@ -131,4 +99,17 @@
     <main><router-outlet/></main>
     <footer>© {{year}} SIGO · Lima Expresa</footer>
   </section>
+
+  @if(puedeUsarChat()){
+    <button class="chat-launcher" type="button" (click)="toggleChat()" [class.active]="chatOpen()" aria-label="Abrir Asistente SIGO">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H8l-4 4V4Zm3 4v2h10V8H7Zm0 4v2h7v-2H7Z"/></svg>
+      <span>Asistente SIGO</span>
+    </button>
+
+    @if(chatOpen()){
+      <section class="chat-popup" aria-label="Asistente SIGO">
+        <app-chat [popup]="true" (cerrar)="cerrarChat()" />
+      </section>
+    }
+  }
 </div>
