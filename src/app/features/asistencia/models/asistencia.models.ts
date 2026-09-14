@@ -18,8 +18,6 @@ export interface Turno {
 
   nombre: string;
 
-  personalProgramado: number;
-
 }
 
 export interface Puesto {
