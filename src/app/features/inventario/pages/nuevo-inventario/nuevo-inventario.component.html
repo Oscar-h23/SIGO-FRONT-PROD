@@ -3,7 +3,7 @@
     <div>
       <p class="eyebrow">SIGO · Inventario</p>
       <h1>Nuevo inventario</h1>
-      <p class="subtitle">Registra el conteo físico de los productos asignados a tu plaza.</p>
+      <p class="subtitle">Registra solo los productos cuyo stock haya cambiado. Si dejas una cantidad vacía, se conservará el stock anterior.</p>
     </div>
 
     <div class="user-card">
@@ -36,7 +36,7 @@
           <h2>Inventario de {{ plazaNombre }}</h2>
           <p>
             El sistema mostrará únicamente los productos permitidos para tu rol y tu plaza.
-            Registra la cantidad física encontrada en cada producto.
+            Solo necesitas ingresar una cantidad cuando el stock haya cambiado. Los productos que dejes vacíos conservarán su stock anterior.
           </p>
         </div>
       </div>
@@ -57,7 +57,7 @@
       </div>
 
       <div class="start-actions">
-        <p>Al finalizar, el conteo quedará cerrado y actualizará el stock registrado de la plaza.</p>
+        <p>Al finalizar, los productos sin cambios conservarán automáticamente el último stock registrado de la plaza.</p>
         <button class="btn btn--primary" type="button" (click)="iniciar()" [disabled]="cargando || !usuario?.plazaId">
           {{ cargando ? 'Iniciando inventario...' : 'Iniciar conteo' }}
         </button>
@@ -77,7 +77,7 @@
 
         <div class="progress-number">
           <strong>{{ porcentaje() }}%</strong>
-          <span>completado</span>
+          <span>con stock definido</span>
         </div>
       </div>
 
@@ -91,11 +91,11 @@
           <strong>{{ productos.length }}</strong>
         </article>
         <article>
-          <span>Contados</span>
+          <span>Modificados</span>
           <strong>{{ contados() }}</strong>
         </article>
         <article [class.metric--pending]="pendientes() > 0">
-          <span>Pendientes</span>
+          <span>Sin stock previo</span>
           <strong>{{ pendientes() }}</strong>
         </article>
       </div>
@@ -158,11 +158,16 @@
                       @if (p.descripcion) {
                         <small>{{ p.descripcion }}</small>
                       }
+                      @if (tieneStockPrevio(p.id)) {
+                        <small>Stock actual: <strong>{{ stockPrevioProducto(p.id) }}</strong> {{ p.unidadMedida }} · Déjalo vacío si no cambió.</small>
+                      } @else {
+                        <small>Sin stock previo: debes ingresar una cantidad para este producto.</small>
+                      }
                     </div>
                   </div>
 
                   <div class="count-field">
-                    <label [for]="'cantidad-' + p.id">Cantidad física</label>
+                    <label [for]="'cantidad-' + p.id">Nueva cantidad</label>
                     <div class="count-control">
                       <input
                         [id]="'cantidad-' + p.id"
@@ -171,7 +176,7 @@
                         step="0.01"
                         inputmode="decimal"
                         [(ngModel)]="cantidades[p.id]"
-                        placeholder="0">
+                        placeholder="Sin cambio">
                       <span>{{ p.unidadMedida }}</span>
                     </div>
                   </div>
@@ -185,8 +190,14 @@
 
     <section class="sticky-actions">
       <div>
-        <strong>{{ contados() }} de {{ productos.length }} productos registrados</strong>
-        <span>@if (todosContados()) { Conteo completo. Ya puedes finalizar. } @else { Completa los {{ pendientes() }} producto(s) pendientes. }</span>
+        <strong>{{ contados() }} producto(s) modificados</strong>
+        <span>
+          @if (pendientes() === 0) {
+            Los demás conservarán automáticamente su stock anterior. Ya puedes finalizar.
+          } @else {
+            Hay {{ pendientes() }} producto(s) sin stock previo; registra solo esos antes de finalizar.
+          }
+        </span>
       </div>
 
       <div class="action-buttons">
@@ -207,13 +218,12 @@
         <p class="eyebrow">Confirmación final</p>
         <h2>¿Finalizar el inventario?</h2>
         <p>
-          Se registrarán <strong>{{ productos.length }} productos</strong> para
-          <strong>{{ plazaNombre }}</strong>. Después de finalizar, el conteo quedará cerrado.
+          Se actualizarán <strong>{{ contados() }} producto(s)</strong>. Los productos que dejaste vacíos conservarán el stock previamente registrado para <strong>{{ plazaNombre }}</strong>.
         </p>
 
         <div class="confirm-summary">
           <span>Inventario #{{ inventarioId }}</span>
-          <span>{{ porcentaje() }}% completo</span>
+          <span>{{ productos.length }} productos totales</span>
         </div>
 
         <div class="modal-actions">
