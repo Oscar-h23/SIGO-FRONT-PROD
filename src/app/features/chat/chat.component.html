@@ -1,29 +1,28 @@
 <div class="chat-page">
   <header class="chat-header">
-    <div>
-      <p class="eyebrow">SIGO · Asistente</p>
-      <h1>Asistente operativo</h1>
-      <p>Consulta información registrada en SIGO sobre asistencia, relevos, vías, trabajadores y operación.</p>
-    </div>
-    <button type="button" class="secondary" (click)="nuevaConversacion()" [disabled]="enviando || !mensajes.length">Nueva conversación</button>
-  </header>
-
-  <section class="assistant-shell">
-    <div class="assistant-status">
+    <div class="assistant-heading">
       <div class="assistant-avatar">AI</div>
       <div>
         <strong>Asistente SIGO</strong>
-        <span>Solo lectura · No modifica información</span>
+        <span>Consulta operativa · Solo lectura</span>
       </div>
-      <span class="status-dot"></span>
     </div>
 
+    <div class="header-actions">
+      <button type="button" class="icon-button" (click)="nuevaConversacion()" [disabled]="enviando || !mensajes.length" title="Nueva conversación">↻</button>
+      @if (popup) {
+        <button type="button" class="icon-button" (click)="cerrarPopup()" [disabled]="enviando" aria-label="Cerrar asistente">×</button>
+      }
+    </div>
+  </header>
+
+  <section class="assistant-shell">
     <div class="messages" #messagesContainer>
       @if (!mensajes.length) {
         <div class="welcome-state">
           <div class="welcome-mark">S</div>
-          <h2>¿Qué necesitas consultar?</h2>
-          <p>Puedes hacer preguntas sobre la información operativa registrada en el sistema.</p>
+          <h2>Hola, ¿qué necesitas revisar?</h2>
+          <p>Puedo ayudarte a consultar asistencia, ausencias, relevos, vías, trabajadores y otros datos registrados en SIGO.</p>
 
           <div class="suggestions">
             @for (sugerencia of sugerencias; track sugerencia) {
@@ -68,11 +67,10 @@
         (keydown)="onKeydown($event)"
         [disabled]="enviando"
         maxlength="1000"
-        placeholder="Escribe una consulta sobre SIGO..."></textarea>
+        placeholder="Pregúntame algo sobre SIGO..."></textarea>
       <button type="button" class="send-button" (click)="enviar()" [disabled]="enviando || !mensaje.trim()">
         {{ enviando ? 'Consultando...' : 'Enviar' }}
       </button>
     </div>
-    <div class="composer-help">Enter para enviar · Shift + Enter para nueva línea</div>
   </section>
 </div>
