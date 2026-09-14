@@ -26,10 +26,12 @@ export class ProductosComponent implements OnInit {
   cargando = true;
   editandoId: number | null = null;
   modalAbierto = false;
+  confirmarGuardado = false;
   busqueda = '';
   filtroEstado: 'TODOS' | 'ACTIVOS' | 'INACTIVOS' = 'TODOS';
 
   form: any = this.nuevoFormulario();
+  private payloadPendiente: any = null;
 
   constructor(
     private api: InventarioApiService,
@@ -127,6 +129,8 @@ export class ProductosComponent implements OnInit {
 
   cerrarModal(): void {
     if (this.guardando) return;
+    this.confirmarGuardado = false;
+    this.payloadPendiente = null;
     this.modalAbierto = false;
     this.editandoId = null;
     this.form = this.nuevoFormulario();
@@ -155,7 +159,7 @@ export class ProductosComponent implements OnInit {
     return this.form.plazas.find((p: any) => p.plazaId === id);
   }
 
-  async guardar(): Promise<void> {
+  solicitarGuardado(): void {
     this.mensaje = '';
     this.error = '';
     if (!this.form.codigo?.trim() || !this.form.nombre?.trim()) return void (this.error = 'Código y nombre son obligatorios.');
@@ -167,35 +171,57 @@ export class ProductosComponent implements OnInit {
     if (this.form.plazas.length === 0) return void (this.error = 'Selecciona al menos una plaza.');
     if (this.form.plazas.some((p: any) => p.stockMinimo === null || Number(p.stockMinimo) < 0)) return void (this.error = 'El stock mínimo no puede ser negativo.');
 
-    this.guardando = true;
-    try {
-      const payload = {
-        ...this.form,
-        codigo: this.form.codigo.trim().toUpperCase(),
-        nombre: this.form.nombre.trim(),
-        descripcion: this.form.descripcion?.trim() || null,
-        unidadMedida: this.form.unidadMedida.trim(),
-        plazas: this.form.plazas.map((p: any) => ({ plazaId: Number(p.plazaId), stockMinimo: Number(p.stockMinimo ?? 0) }))
-      };
+    this.payloadPendiente = {
+      ...this.form,
+      codigo: this.form.codigo.trim().toUpperCase(),
+      nombre: this.form.nombre.trim(),
+      descripcion: this.form.descripcion?.trim() || null,
+      unidadMedida: this.form.unidadMedida.trim(),
+      plazas: this.form.plazas.map((p: any) => ({ plazaId: Number(p.plazaId), stockMinimo: Number(p.stockMinimo ?? 0) }))
+    };
+    this.confirmarGuardado = true;
+  }
 
+  cancelarConfirmacion(): void {
+    if (this.guardando) return;
+    this.confirmarGuardado = false;
+    this.payloadPendiente = null;
+  }
+
+  async guardar(): Promise<void> {
+    if (!this.payloadPendiente || this.guardando) return;
+    this.guardando = true;
+    this.error = '';
+
+    try {
+      let guardado: ProductoAdmin;
       if (this.editandoId) {
-        await firstValueFrom(this.api.actualizarProducto(this.editandoId, payload));
+        guardado = await firstValueFrom(this.api.actualizarProducto(this.editandoId, this.payloadPendiente));
         this.mensaje = 'Producto actualizado correctamente.';
       } else {
-        await firstValueFrom(this.api.crearProducto(payload));
+        guardado = await firstValueFrom(this.api.crearProducto(this.payloadPendiente));
         this.mensaje = 'Producto creado correctamente.';
       }
 
+      const index = this.productos.findIndex(p => p.id === guardado.id);
+      if (index >= 0) {
+        this.productos = this.productos.map(p => p.id === guardado.id ? guardado : p);
+      } else {
+        this.productos = [guardado, ...this.productos];
+      }
+
+      this.confirmarGuardado = false;
+      this.payloadPendiente = null;
       this.modalAbierto = false;
       this.editandoId = null;
       this.form = this.nuevoFormulario();
       this.prepararPlazaControlador();
-      await this.cargarProductos();
     } catch (e: any) {
+      this.confirmarGuardado = false;
       this.error = this.extraerError(e);
     } finally {
       this.guardando = false;
-      this.cdr.markForCheck();
+      this.cdr.detectChanges();
     }
   }
 
@@ -205,13 +231,13 @@ export class ProductosComponent implements OnInit {
     this.error = '';
     this.mensaje = '';
     try {
-      await firstValueFrom(this.api.cambiarEstadoProducto(producto.id, nuevoEstado));
+      const actualizado = await firstValueFrom(this.api.cambiarEstadoProducto(producto.id, nuevoEstado));
+      this.productos = this.productos.map(p => p.id === actualizado.id ? actualizado : p);
       this.mensaje = `Producto ${nuevoEstado ? 'activado' : 'desactivado'} correctamente.`;
-      await this.cargarProductos();
     } catch (e: any) {
       this.error = this.extraerError(e);
     } finally {
-      this.cdr.markForCheck();
+      this.cdr.detectChanges();
     }
   }
 
