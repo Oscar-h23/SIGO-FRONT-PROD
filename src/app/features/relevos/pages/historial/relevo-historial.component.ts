@@ -19,8 +19,35 @@ export class RelevoHistorialComponent implements OnInit {
   relevos: RelevoResponse[] = []; plazas: Plaza[] = []; inicio = ''; fin = ''; plazaId: number | null = null;
   get esOperador(): boolean { return this.auth.usuario()?.rol === 'OPERADOR'; }
 
-  ngOnInit(): void { const hoy=this.fechaHoy(); this.inicio=hoy; this.fin=hoy; const usuario=this.auth.usuario(); if(this.esOperador){this.plazaId=usuario?.plazaId??null;this.buscar();return;} this.catalogos.getPlazas().subscribe({next:data=>{this.plazas=(data??[]).filter(i=>i.activo!==false);this.buscar();},error:()=>{this.error.set('No se pudieron cargar las plazas.');this.buscar();}}); }
-  buscar(): void { if(this.cargando())return; this.error.set(''); if(!this.inicio||!this.fin)return this.error.set('Selecciona las fechas de búsqueda.'); if(this.inicio>this.fin)return this.error.set('La fecha inicial no puede ser posterior a la fecha final.'); this.cargando.set(true); this.api.listar(this.inicio,this.fin).subscribe({next:data=>{let items=(data??[]).map(i=>({...i,checklist:i.checklist??[],vias:i.vias??[]}));if(this.esOperador){const u=this.auth.usuario();items=items.filter(i=>i.fecha===this.fechaHoy()&&i.plazaId===u?.plazaId);}else if(this.plazaId){items=items.filter(i=>i.plazaId===this.plazaId);}this.relevos=items.sort((a,b)=>this.fechaHoraNumero(b)-this.fechaHoraNumero(a));this.cargando.set(false);},error:err=>{this.cargando.set(false);this.error.set(err?.error?.message??'No se pudo cargar el historial de relevos.');}}); }
+  ngOnInit(): void {
+    const hoy=this.fechaHoy();
+    this.inicio=this.esOperador?this.fechaInicioVentanaOperador():hoy;
+    this.fin=hoy;
+    const usuario=this.auth.usuario();
+    if(this.esOperador){this.plazaId=usuario?.plazaId??null;this.buscar();return;}
+    this.catalogos.getPlazas().subscribe({next:data=>{this.plazas=(data??[]).filter(i=>i.activo!==false);this.buscar();},error:()=>{this.error.set('No se pudieron cargar las plazas.');this.buscar();}});
+  }
+  buscar(): void {
+    if(this.cargando())return;
+    this.error.set('');
+    if(!this.inicio||!this.fin)return this.error.set('Selecciona las fechas de búsqueda.');
+    if(this.inicio>this.fin)return this.error.set('La fecha inicial no puede ser posterior a la fecha final.');
+    this.cargando.set(true);
+    this.api.listar(this.inicio,this.fin).subscribe({
+      next:data=>{
+        let items=(data??[]).map(i=>({...i,checklist:i.checklist??[],vias:i.vias??[]}));
+        if(this.esOperador){
+          const u=this.auth.usuario();
+          items=items.filter(i=>i.plazaId===u?.plazaId);
+        }else if(this.plazaId){
+          items=items.filter(i=>i.plazaId===this.plazaId);
+        }
+        this.relevos=items.sort((a,b)=>this.fechaHoraNumero(b)-this.fechaHoraNumero(a));
+        this.cargando.set(false);
+      },
+      error:err=>{this.cargando.set(false);this.error.set(err?.error?.message??'No se pudo cargar el historial de relevos.');}
+    });
+  }
   limpiarFiltros():void{const hoy=this.fechaHoy();this.inicio=hoy;this.fin=hoy;this.plazaId=null;this.buscar();}
   abrirDetalle(r:RelevoResponse):void{this.detalleSeleccionado.set(r);document.body.style.overflow='hidden';} cerrarDetalle():void{this.detalleSeleccionado.set(null);document.body.style.overflow='';}
   baseOperativa(r:RelevoResponse){return r.checklist.filter(i=>i.categoria==='BASE_OPERATIVA');} plazaPeaje(r:RelevoResponse){return r.checklist.filter(i=>i.categoria==='PLAZA_PEAJE');}
@@ -43,7 +70,6 @@ export class RelevoHistorialComponent implements OnInit {
   }
 
   private encabezadoPdf(pdf:jsPDF,logo:string|null,relevo:RelevoResponse):void{
-    // Cabecera clara para conservar el contraste del logotipo azul corporativo.
     pdf.setFillColor(255,255,255);pdf.rect(0,0,210,36,'F');
     if(logo){try{pdf.addImage(logo,'PNG',14,7,42,20,undefined,'FAST');}catch{}}
     pdf.setTextColor(15,23,42);pdf.setFont('helvetica','bold');pdf.setFontSize(16);pdf.text('REPORTE DE RELEVO DE TURNO',196,13,{align:'right'});
@@ -60,5 +86,7 @@ export class RelevoHistorialComponent implements OnInit {
   private async agregarEvidenciasPdf(pdf:jsPDF,r:RelevoResponse,logo:string|null):Promise<void>{const ev:{titulo:string;subtitulo:string;url:string}[]=[];for(const i of r.checklist)for(const e of i.evidencias??[])ev.push({titulo:i.nombre,subtitulo:this.estadoLabel(i.estado),url:e.urlArchivo});for(const v of r.vias)for(const e of v.evidencias??[])ev.push({titulo:`Vía ${v.numero}`,subtitulo:this.estadoLabel(v.estado),url:e.urlArchivo});if(!ev.length)return;for(let i=0;i<ev.length;i+=4){pdf.addPage();this.encabezadoPdf(pdf,logo,r);this.tituloSeccion(pdf,'EVIDENCIAS FOTOGRÁFICAS',46);const lote=ev.slice(i,i+4);for(let j=0;j<lote.length;j++){const col=j%2,row=Math.floor(j/2),x=25+col*92,y=60+row*108;pdf.setFont('helvetica','bold');pdf.setFontSize(8.5);pdf.setTextColor(15,23,42);pdf.text(lote[j].titulo,x,y);pdf.setFont('helvetica','normal');pdf.setFontSize(7);pdf.setTextColor(100,116,139);pdf.text(lote[j].subtitulo,x,y+4);const data=await this.imagenDataUrl(lote[j].url),w=54,h=72;if(data){try{pdf.addImage(data,'JPEG',x,y+8,w,h,undefined,'FAST');}catch{}}pdf.setDrawColor(203,213,225);pdf.roundedRect(x,y+8,w,h,2,2,'S');}}}
   private numerarPaginas(pdf:jsPDF):void{const total=pdf.getNumberOfPages();for(let p=1;p<=total;p++){pdf.setPage(p);pdf.setDrawColor(226,232,240);pdf.line(14,287,196,287);pdf.setFont('helvetica','normal');pdf.setFontSize(7);pdf.setTextColor(100,116,139);pdf.text('Lima Expresa · SIGO · Documento generado por el sistema',14,292);pdf.text(`Página ${p} de ${total}`,196,292,{align:'right'});}}
   private async assetDataUrl(p:string):Promise<string|null>{try{const res=await fetch(p);if(!res.ok)return null;return await this.blobDataUrl(await res.blob());}catch{return null;}} private async imagenDataUrl(u:string):Promise<string|null>{try{const res=await fetch(u);if(!res.ok)return null;return await this.blobDataUrl(await res.blob());}catch{return null;}} private blobDataUrl(b:Blob):Promise<string|null>{return new Promise(resolve=>{const reader=new FileReader();reader.onload=()=>resolve(typeof reader.result==='string'?reader.result:null);reader.onerror=()=>resolve(null);reader.readAsDataURL(b);});}
-  private fechaHoraNumero(r:RelevoResponse):number{const v=new Date(`${r.fecha}T${r.hora||'00:00:00'}`).getTime();return Number.isNaN(v)?0:v;} private fechaHoy():string{const now=new Date(),offset=now.getTimezoneOffset();return new Date(now.getTime()-offset*60000).toISOString().slice(0,10);}
+  private fechaHoraNumero(r:RelevoResponse):number{const v=new Date(`${r.fecha}T${r.hora||'00:00:00'}`).getTime();return Number.isNaN(v)?0:v;}
+  private fechaHoy():string{const now=new Date(),offset=now.getTimezoneOffset();return new Date(now.getTime()-offset*60000).toISOString().slice(0,10);}
+  private fechaInicioVentanaOperador():string{const now=new Date();if(now.getHours()>=14)return this.fechaHoy();const anterior=new Date(now);anterior.setDate(anterior.getDate()-1);const offset=anterior.getTimezoneOffset();return new Date(anterior.getTime()-offset*60000).toISOString().slice(0,10);}
 }
