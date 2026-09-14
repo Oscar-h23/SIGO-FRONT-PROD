@@ -3,8 +3,12 @@ import{Component,HostListener,signal}from'@angular/core';import{Router,RouterLin
 export class MainLayoutComponent{
  sidebarOpen=signal(false);collapsed=signal(false);chatOpen=signal(false);year=new Date().getFullYear();
  constructor(public auth:AuthService,private router:Router){}
- has(m:ModuloSigo){return this.auth.tieneModulo(m)}
- puedeUsarChat(){return this.auth.tieneRol('SUPERVISOR','CONTROLADOR')&&this.auth.tieneModulo('CHAT')}
+ esControlador(){return this.auth.tieneRol('CONTROLADOR')}
+ has(m:ModuloSigo){
+  if(this.esControlador())return m==='DASHBOARD'||m==='ASISTENCIA';
+  return this.auth.tieneModulo(m)
+ }
+ puedeUsarChat(){return this.auth.tieneRol('SUPERVISOR')&&this.auth.tieneModulo('CHAT')}
  toggleChat(){if(this.puedeUsarChat())this.chatOpen.update(v=>!v)}
  cerrarChat(){this.chatOpen.set(false)}
  toggle(){innerWidth<=900?this.sidebarOpen.update(v=>!v):this.collapsed.update(v=>!v)}
