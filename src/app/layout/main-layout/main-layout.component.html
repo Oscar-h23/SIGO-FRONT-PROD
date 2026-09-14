@@ -48,14 +48,16 @@
           <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 2 9 4.5v11L12 22l-9-4.5v-11L12 2Zm0 2.2L6.4 7 12 9.8 17.6 7 12 4.2ZM5 8.6v7.7l6 3v-7.7l-6-3Zm8 10.7 6-3V8.6l-6 3v7.7Z"/></svg></span>
           <span class="nav-label">Nuevo inventario</span>
         </a>
-        <a routerLink="/inventario/historial" routerLinkActive="active" (click)="close()" data-tooltip="Historial de inventario" aria-label="Historial de inventario">
-          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 3h16v4H4V3Zm1 6h14v12H5V9Zm3 3v2h8v-2H8Zm0 4v2h5v-2H8Z"/></svg></span>
-          <span class="nav-label">Historial</span>
-        </a>
-        <a routerLink="/inventario/stock" routerLinkActive="active" (click)="close()" data-tooltip="Stock" aria-label="Stock">
-          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 5h18v4H3V5Zm1 6h7v8H4v-8Zm9 0h7v3h-7v-3Zm0 5h7v3h-7v-3Z"/></svg></span>
-          <span class="nav-label">Stock</span>
-        </a>
+        @if(auth.tieneRol('SUPERVISOR','CONTROLADOR')){
+          <a routerLink="/inventario/historial" routerLinkActive="active" (click)="close()" data-tooltip="Historial de inventario" aria-label="Historial de inventario">
+            <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 3h16v4H4V3Zm1 6h14v12H5V9Zm3 3v2h8v-2H8Zm0 4v2h5v-2H8Z"/></svg></span>
+            <span class="nav-label">Historial</span>
+          </a>
+          <a routerLink="/inventario/stock" routerLinkActive="active" (click)="close()" data-tooltip="Stock" aria-label="Stock">
+            <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 5h18v4H3V5Zm1 6h7v8H4v-8Zm9 0h7v3h-7v-3Zm0 5h7v3h-7v-3Z"/></svg></span>
+            <span class="nav-label">Stock</span>
+          </a>
+        }
       }
 
       @if(has('ADMIN_PRODUCTOS')){
