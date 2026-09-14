@@ -9,14 +9,17 @@
         <p>Gestiona productos, visibilidad por rol, plazas asignadas y stock mínimo.</p>
       }
     </div>
-    <div class="hero-meta">
-      <span>{{ productosVisibles().length }} visibles</span>
-      <span>{{ totalActivos() }} activos</span>
-      <span>{{ totalInactivos() }} inactivos</span>
+    <div class="hero-actions">
+      <div class="hero-meta">
+        <span>{{ productosVisibles().length }} visibles</span>
+        <span>{{ totalActivos() }} activos</span>
+        <span>{{ totalInactivos() }} inactivos</span>
+      </div>
+      <button type="button" class="primary create-button" (click)="abrirCrear()">Crear producto</button>
     </div>
   </section>
 
-  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (error && !modalAbierto) { <div class="alert error">{{ error }}</div> }
   @if (mensaje) { <div class="alert success">{{ mensaje }}</div> }
 
   <section class="toolbar">
@@ -28,148 +31,153 @@
     </select>
   </section>
 
-  <div class="layout">
-    <section class="catalog-card">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">Catálogo</p>
-          <h2>Productos registrados</h2>
-        </div>
+  <section class="catalog-card">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Catálogo</p>
+        <h2>Productos registrados</h2>
       </div>
+    </div>
 
-      @if (cargando) {
-        <div class="empty">Cargando productos...</div>
-      } @else {
-        <div class="product-list">
-          @for (p of productosVisibles(); track p.id) {
-            <article class="product-card" [class.inactive]="!p.activo">
-              <div class="product-main">
-                <div class="code-badge">{{ p.codigo }}</div>
-                <div>
-                  <h3>{{ p.nombre }}</h3>
-                  <p>{{ p.descripcion || 'Sin descripción' }}</p>
-                  <div class="tags">
-                    @if (p.categoria) { <span>{{ p.categoria }}</span> }
-                    @if (p.ambito) { <span>{{ p.ambito }}</span> }
-                    <span>{{ p.unidadMedida }}</span>
-                  </div>
+    @if (cargando) {
+      <div class="empty">Cargando productos...</div>
+    } @else {
+      <div class="product-list">
+        @for (p of productosVisibles(); track p.id) {
+          <article class="product-card" [class.inactive]="!p.activo">
+            <div class="product-main">
+              <div class="code-badge">{{ p.codigo }}</div>
+              <div>
+                <h3>{{ p.nombre }}</h3>
+                <p>{{ p.descripcion || 'Sin descripción' }}</p>
+                <div class="tags">
+                  @if (p.categoria) { <span>{{ p.categoria }}</span> }
+                  @if (p.ambito) { <span>{{ p.ambito }}</span> }
+                  <span>{{ p.unidadMedida }}</span>
                 </div>
               </div>
+            </div>
 
-              <div class="product-data">
-                <div>
-                  <small>Roles con visibilidad</small>
-                  <strong>{{ p.roles.join(', ') || 'Sin roles' }}</strong>
-                </div>
-                <div>
-                  <small>Plazas</small>
-                  <div class="plaza-tags">
-                    @for (plaza of p.plazas; track plaza.plazaId) {
-                      <span>{{ plaza.plaza }} · mín. {{ plaza.stockMinimo }}</span>
-                    }
-                  </div>
+            <div class="product-data">
+              <div>
+                <small>Roles con visibilidad</small>
+                <strong>{{ p.roles.join(', ') || 'Sin roles' }}</strong>
+              </div>
+              <div>
+                <small>Plazas</small>
+                <div class="plaza-tags">
+                  @for (plaza of p.plazas; track plaza.plazaId) {
+                    <span>{{ plaza.plaza }} · mín. {{ plaza.stockMinimo }}</span>
+                  }
                 </div>
               </div>
+            </div>
 
-              <div class="product-actions">
-                <span class="status" [class.off]="!p.activo">{{ p.activo ? 'Activo' : 'Inactivo' }}</span>
-                <button type="button" class="secondary" (click)="editar(p)">Editar</button>
-                <button type="button" class="secondary danger" (click)="cambiarEstado(p)">{{ p.activo ? 'Desactivar' : 'Activar' }}</button>
-              </div>
-            </article>
-          } @empty {
-            <div class="empty">No se encontraron productos con los filtros seleccionados.</div>
-          }
-        </div>
-      }
-    </section>
-
-    <aside class="form-card">
-      <div class="form-title">
-        <div>
-          <p class="eyebrow">{{ esEdicion() ? 'Edición' : 'Nuevo registro' }}</p>
-          <h2>{{ esEdicion() ? 'Editar producto' : 'Crear producto' }}</h2>
-        </div>
-        @if (esEdicion()) {
-          <button type="button" class="link-button" (click)="cancelarEdicion()">Cancelar</button>
+            <div class="product-actions">
+              <span class="status" [class.off]="!p.activo">{{ p.activo ? 'Activo' : 'Inactivo' }}</span>
+              <button type="button" class="secondary" (click)="editar(p)">Editar</button>
+              <button type="button" class="secondary danger" (click)="cambiarEstado(p)">{{ p.activo ? 'Desactivar' : 'Activar' }}</button>
+            </div>
+          </article>
+        } @empty {
+          <div class="empty">No se encontraron productos con los filtros seleccionados.</div>
         }
       </div>
+    }
+  </section>
 
-      <div class="field-grid">
-        <label>Código<input placeholder="Ej. CONO001" [(ngModel)]="form.codigo"></label>
-        <label>Nombre<input placeholder="Nombre del producto" [(ngModel)]="form.nombre"></label>
-      </div>
-
-      <label>Descripción<textarea placeholder="Descripción opcional" [(ngModel)]="form.descripcion"></textarea></label>
-
-      <div class="field-grid">
-        <label>Categoría
-          <select [(ngModel)]="form.categoriaId">
-            <option [ngValue]="null">Selecciona una categoría</option>
-            @for (c of categorias; track c.id) { <option [ngValue]="c.id">{{ c.nombre }}</option> }
-          </select>
-        </label>
-        <label>Ámbito
-          <select [(ngModel)]="form.ambitoId">
-            <option [ngValue]="null">Selecciona un ámbito</option>
-            @for (a of ambitos; track a.id) { <option [ngValue]="a.id">{{ a.nombre }}</option> }
-          </select>
-        </label>
-      </div>
-
-      <label>Unidad de medida<input placeholder="Ej. Unidad" [(ngModel)]="form.unidadMedida"></label>
-
-      <div class="form-section">
-        <h3>Quién puede verlo</h3>
-        <p>Define qué roles encontrarán este producto al realizar un inventario.</p>
-        <div class="check-grid">
-          @for (r of roles; track r.id) {
-            @if (!(esControlador() && r.codigo === 'SUPERVISOR')) {
-              <label class="check-card" [class.selected]="form.roles.includes(r.codigo)">
-                <input type="checkbox" [checked]="form.roles.includes(r.codigo)" (change)="toggleRol(r.codigo || '')">
-                <span>{{ r.nombre }}</span>
-              </label>
-            }
-          }
-        </div>
-      </div>
-
-      <div class="form-section">
-        <h3>Plazas y stock mínimo</h3>
-        <p>El stock mínimo se usará para identificar productos con nivel bajo.</p>
-
-        @if (esControlador()) {
-          <div class="controller-plaza">
-            <div><strong>{{ auth.usuario()?.plaza }}</strong><span>Tu plaza asignada</span></div>
-            @if (auth.usuario()?.plazaId; as plazaId) {
-              @if (plazaSeleccionada(plazaId); as seleccion) {
-                <input type="number" min="0" [(ngModel)]="seleccion.stockMinimo" placeholder="Stock mínimo">
-              }
-            }
+  @if (modalAbierto) {
+    <div class="modal-backdrop" (click)="cerrarModal()">
+      <section class="product-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">{{ esEdicion() ? 'Edición de producto' : 'Nuevo producto' }}</p>
+            <h2>{{ esEdicion() ? 'Editar producto' : 'Crear producto' }}</h2>
+            <p>{{ esEdicion() ? 'Actualiza los datos, permisos y plazas del producto.' : 'Registra un nuevo producto y define dónde estará disponible.' }}</p>
           </div>
-        } @else {
-          <div class="plazas-grid">
-            @for (p of plazas; track p.id) {
-              <div class="plaza-card" [class.selected]="!!plazaSeleccionada(p.id)">
-                <label class="check-inline">
-                  <input type="checkbox" [checked]="!!plazaSeleccionada(p.id)" (change)="togglePlaza(p.id)">
-                  <strong>{{ p.codigo }}</strong>
-                </label>
-                @if (plazaSeleccionada(p.id); as seleccion) {
-                  <input type="number" min="0" [(ngModel)]="seleccion.stockMinimo" placeholder="Stock mínimo">
+          <button type="button" class="modal-close" (click)="cerrarModal()" [disabled]="guardando" aria-label="Cerrar">×</button>
+        </div>
+
+        <div class="modal-body form-card">
+          @if (error) { <div class="alert error modal-alert">{{ error }}</div> }
+
+          <div class="field-grid">
+            <label>Código<input placeholder="Ej. CONO001" [(ngModel)]="form.codigo"></label>
+            <label>Nombre<input placeholder="Nombre del producto" [(ngModel)]="form.nombre"></label>
+          </div>
+
+          <label>Descripción<textarea placeholder="Descripción opcional" [(ngModel)]="form.descripcion"></textarea></label>
+
+          <div class="field-grid">
+            <label>Categoría
+              <select [(ngModel)]="form.categoriaId">
+                <option [ngValue]="null">Selecciona una categoría</option>
+                @for (c of categorias; track c.id) { <option [ngValue]="c.id">{{ c.nombre }}</option> }
+              </select>
+            </label>
+            <label>Ámbito
+              <select [(ngModel)]="form.ambitoId">
+                <option [ngValue]="null">Selecciona un ámbito</option>
+                @for (a of ambitos; track a.id) { <option [ngValue]="a.id">{{ a.nombre }}</option> }
+              </select>
+            </label>
+          </div>
+
+          <label>Unidad de medida<input placeholder="Ej. Unidad" [(ngModel)]="form.unidadMedida"></label>
+
+          <div class="form-section">
+            <h3>Quién puede verlo</h3>
+            <p>Define qué roles encontrarán este producto al realizar un inventario.</p>
+            <div class="check-grid">
+              @for (r of roles; track r.id) {
+                @if (!(esControlador() && r.codigo === 'SUPERVISOR')) {
+                  <label class="check-card" [class.selected]="form.roles.includes(r.codigo)">
+                    <input type="checkbox" [checked]="form.roles.includes(r.codigo)" (change)="toggleRol(r.codigo || '')">
+                    <span>{{ r.nombre }}</span>
+                  </label>
+                }
+              }
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Plazas y stock mínimo</h3>
+            <p>El stock mínimo se usará para identificar productos con nivel bajo.</p>
+
+            @if (esControlador()) {
+              <div class="controller-plaza">
+                <div><strong>{{ auth.usuario()?.plaza }}</strong><span>Tu plaza asignada</span></div>
+                @if (auth.usuario()?.plazaId; as plazaId) {
+                  @if (plazaSeleccionada(plazaId); as seleccion) {
+                    <input type="number" min="0" [(ngModel)]="seleccion.stockMinimo" placeholder="Stock mínimo">
+                  }
+                }
+              </div>
+            } @else {
+              <div class="plazas-grid">
+                @for (p of plazas; track p.id) {
+                  <div class="plaza-card" [class.selected]="!!plazaSeleccionada(p.id)">
+                    <label class="check-inline">
+                      <input type="checkbox" [checked]="!!plazaSeleccionada(p.id)" (change)="togglePlaza(p.id)">
+                      <strong>{{ p.codigo }}</strong>
+                    </label>
+                    @if (plazaSeleccionada(p.id); as seleccion) {
+                      <input type="number" min="0" [(ngModel)]="seleccion.stockMinimo" placeholder="Stock mínimo">
+                    }
+                  </div>
                 }
               </div>
             }
           </div>
-        }
-      </div>
+        </div>
 
-      <div class="form-actions">
-        @if (esEdicion()) { <button type="button" class="secondary" (click)="cancelarEdicion()">Cancelar</button> }
-        <button type="button" class="primary" (click)="guardar()" [disabled]="guardando">
-          {{ guardando ? 'Guardando...' : (esEdicion() ? 'Guardar cambios' : 'Crear producto') }}
-        </button>
-      </div>
-    </aside>
-  </div>
+        <div class="modal-footer">
+          <button type="button" class="secondary" (click)="cerrarModal()" [disabled]="guardando">Cancelar</button>
+          <button type="button" class="primary" (click)="guardar()" [disabled]="guardando">
+            {{ guardando ? 'Guardando...' : (esEdicion() ? 'Guardar cambios' : 'Crear producto') }}
+          </button>
+        </div>
+      </section>
+    </div>
+  }
 </div>
