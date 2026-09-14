@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -30,7 +30,11 @@ export class ProductosComponent implements OnInit {
 
   form: any = this.nuevoFormulario();
 
-  constructor(private api: InventarioApiService, public auth: AuthService) {}
+  constructor(
+    private api: InventarioApiService,
+    public auth: AuthService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   async ngOnInit(): Promise<void> {
     try {
@@ -41,6 +45,7 @@ export class ProductosComponent implements OnInit {
       this.error = this.extraerError(e);
     } finally {
       this.cargando = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -75,7 +80,9 @@ export class ProductosComponent implements OnInit {
     return this.productos.filter(producto => producto.plazas?.some(plaza => plaza.plazaId === plazaId));
   }
 
-  async cargarProductos(): Promise<void> { this.productos = await firstValueFrom(this.api.productosAdmin()); }
+  async cargarProductos(): Promise<void> {
+    this.productos = await firstValueFrom(this.api.productosAdmin());
+  }
 
   async cargarCatalogos(): Promise<void> {
     const [categorias, ambitos, roles, plazas] = await Promise.all([
@@ -129,7 +136,9 @@ export class ProductosComponent implements OnInit {
     else this.form.plazas.push({ plazaId, stockMinimo: 0 });
   }
 
-  plazaSeleccionada(id: number): any { return this.form.plazas.find((p: any) => p.plazaId === id); }
+  plazaSeleccionada(id: number): any {
+    return this.form.plazas.find((p: any) => p.plazaId === id);
+  }
 
   async guardar(): Promise<void> {
     this.mensaje = '';
@@ -170,6 +179,7 @@ export class ProductosComponent implements OnInit {
       this.error = this.extraerError(e);
     } finally {
       this.guardando = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -184,6 +194,8 @@ export class ProductosComponent implements OnInit {
       await this.cargarProductos();
     } catch (e: any) {
       this.error = this.extraerError(e);
+    } finally {
+      this.cdr.markForCheck();
     }
   }
 
