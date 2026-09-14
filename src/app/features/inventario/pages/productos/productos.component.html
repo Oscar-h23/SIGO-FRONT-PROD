@@ -173,8 +173,31 @@
 
         <div class="modal-footer">
           <button type="button" class="secondary" (click)="cerrarModal()" [disabled]="guardando">Cancelar</button>
+          <button type="button" class="primary" (click)="solicitarGuardado()" [disabled]="guardando">
+            {{ esEdicion() ? 'Guardar cambios' : 'Crear producto' }}
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (confirmarGuardado) {
+    <div class="confirm-backdrop" (click)="cancelarConfirmacion()">
+      <section class="confirm-dialog" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
+        <div class="confirm-icon">!</div>
+        <p class="eyebrow">Confirmación</p>
+        <h2>{{ esEdicion() ? '¿Guardar cambios del producto?' : '¿Crear este producto?' }}</h2>
+        <p>
+          @if (esEdicion()) {
+            Se actualizará <strong>{{ form.nombre }}</strong> con la nueva configuración de roles, plazas y stock mínimo.
+          } @else {
+            Se creará el producto <strong>{{ form.nombre }}</strong> con la configuración seleccionada.
+          }
+        </p>
+        <div class="confirm-actions">
+          <button type="button" class="secondary" (click)="cancelarConfirmacion()" [disabled]="guardando">Volver</button>
           <button type="button" class="primary" (click)="guardar()" [disabled]="guardando">
-            {{ guardando ? 'Guardando...' : (esEdicion() ? 'Guardar cambios' : 'Crear producto') }}
+            {{ guardando ? 'Procesando...' : (esEdicion() ? 'Sí, guardar cambios' : 'Sí, crear producto') }}
           </button>
         </div>
       </section>
