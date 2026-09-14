@@ -3,7 +3,7 @@ import { ChangeDetectorRef, Component, ElementRef, EventEmitter, HostBinding, In
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
-import { ChatApiService } from './chat-api.service';
+import { ChatApiService, ChatTurnPayload } from './chat-api.service';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -46,6 +46,11 @@ export class ChatComponent {
     const pregunta = (texto ?? this.mensaje).trim();
     if (!pregunta || this.enviando) return;
 
+    const history: ChatTurnPayload[] = this.mensajes.slice(-6).map(item => ({
+      role: item.role,
+      text: item.text
+    }));
+
     this.mensaje = '';
     this.error = '';
     this.mensajes.push({ role: 'user', text: pregunta, time: new Date() });
@@ -54,7 +59,7 @@ export class ChatComponent {
     this.scrollAbajo();
 
     try {
-      const respuesta = await firstValueFrom(this.api.preguntar(pregunta));
+      const respuesta = await firstValueFrom(this.api.preguntar(pregunta, history));
       this.mensajes.push({
         role: 'assistant',
         text: respuesta?.response?.trim() || 'No encontré información suficiente para responderte.',
