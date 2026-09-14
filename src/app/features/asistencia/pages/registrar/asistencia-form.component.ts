@@ -6,6 +6,7 @@ import { forkJoin } from 'rxjs';
 
 import { environment } from '../../../../../environments/environment';
 import { AsistenciaApiService } from '../../services/asistencia-api.service';
+import { AsistenciaProgramacionService } from '../../services/asistencia-programacion.service';
 import { AsistenciaRequest, AsistenciaResponse, MotivoAusencia, Plaza, Trabajador, Turno } from '../../models/asistencia.models';
 import { ImageCropperModalComponent } from '../../shared/image-cropper-modal.component';
 
@@ -27,10 +28,12 @@ type EvidenciaTipo = 'CALENTAMIENTO' | 'INICIO_TURNO' | 'TAPONES_AUDITIVOS';
 export class AsistenciaFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(AsistenciaApiService);
+  private readonly programacion = inject(AsistenciaProgramacionService);
   private readonly http = inject(HttpClient);
 
   readonly loadingCatalogos = signal(true);
   readonly loadingPersonal = signal(false);
+  readonly loadingProgramados = signal(false);
   readonly saving = signal(false);
   readonly success = signal('');
   readonly error = signal('');
@@ -104,6 +107,7 @@ export class AsistenciaFormComponent implements OnInit {
     this.resetAusenciasTrabajadores();
     this.controladores.set([]);
     this.agentes.set([]);
+    this.syncTurno();
     if (!plazaId) { this.loadingPersonal.set(false); return; }
     this.cargarPersonalPlaza(Number(plazaId));
   }
@@ -197,6 +201,7 @@ export class AsistenciaFormComponent implements OnInit {
   cerrarSuccessModal(): void { this.successModalVisible.set(false); }
 
   private validarRegistro(): boolean {
+    if (this.loadingProgramados()) { this.error.set('Espera a que se cargue la programación de la plaza y turno.'); return false; }
     if (this.form.invalid) { this.error.set('Completa los campos obligatorios antes de registrar la asistencia.'); return false; }
     const programados = Number(this.form.controls.programados.value ?? 0);
     const presentes = Number(this.form.controls.presentes.value ?? 0);
@@ -249,11 +254,35 @@ export class AsistenciaFormComponent implements OnInit {
   }
 
   private syncTurno(): void {
-    const turno = this.turnos().find(item => item.id === Number(this.form.controls.turnoId.value));
-    const total = turno?.personalProgramado ?? 0;
-    this.form.controls.programados.setValue(total, { emitEvent: false });
-    this.form.controls.presentes.setValue(total, { emitEvent: false });
-    this.actualizarValidadorPresentes(); this.syncAusencias();
+    const plazaId = Number(this.form.controls.plazaId.value ?? 0);
+    const turnoId = Number(this.form.controls.turnoId.value ?? 0);
+
+    if (!plazaId || !turnoId) {
+      this.form.controls.programados.setValue(0, { emitEvent: false });
+      this.form.controls.presentes.setValue(0, { emitEvent: false });
+      this.actualizarValidadorPresentes();
+      this.syncAusencias();
+      return;
+    }
+
+    this.loadingProgramados.set(true);
+    this.programacion.obtener(plazaId, turnoId).subscribe({
+      next: ({ programados }) => {
+        this.form.controls.programados.setValue(programados, { emitEvent: false });
+        this.form.controls.presentes.setValue(programados, { emitEvent: false });
+        this.actualizarValidadorPresentes();
+        this.syncAusencias();
+        this.loadingProgramados.set(false);
+      },
+      error: err => {
+        this.form.controls.programados.setValue(0, { emitEvent: false });
+        this.form.controls.presentes.setValue(0, { emitEvent: false });
+        this.actualizarValidadorPresentes();
+        this.syncAusencias();
+        this.loadingProgramados.set(false);
+        this.error.set(`No se pudo cargar la cantidad programada. ${this.errorMessage(err)}`);
+      }
+    });
   }
 
   private syncProgramados(): void {
