@@ -6,13 +6,18 @@ export interface ChatResponse {
   response: string;
 }
 
+export interface ChatTurnPayload {
+  role: 'user' | 'assistant';
+  text: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ChatApiService {
   private readonly api = environment.apiUrl;
 
   constructor(private readonly http: HttpClient) {}
 
-  preguntar(message: string) {
-    return this.http.post<ChatResponse>(`${this.api}/chat`, { message });
+  preguntar(message: string, history: ChatTurnPayload[] = []) {
+    return this.http.post<ChatResponse>(`${this.api}/chat`, { message, history });
   }
 }
