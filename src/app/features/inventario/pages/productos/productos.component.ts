@@ -25,6 +25,7 @@ export class ProductosComponent implements OnInit {
   guardando = false;
   cargando = true;
   editandoId: number | null = null;
+  modalAbierto = false;
   busqueda = '';
   filtroEstado: 'TODOS' | 'ACTIVOS' | 'INACTIVOS' = 'TODOS';
 
@@ -97,6 +98,14 @@ export class ProductosComponent implements OnInit {
     this.plazas = plazas;
   }
 
+  abrirCrear(): void {
+    this.editandoId = null;
+    this.form = this.nuevoFormulario();
+    this.prepararPlazaControlador();
+    this.error = '';
+    this.modalAbierto = true;
+  }
+
   editar(producto: ProductoAdmin): void {
     this.editandoId = producto.id;
     this.mensaje = '';
@@ -113,14 +122,20 @@ export class ProductosComponent implements OnInit {
       plazas: (producto.plazas ?? []).map(p => ({ plazaId: p.plazaId, stockMinimo: p.stockMinimo ?? 0 }))
     };
     this.prepararPlazaControlador();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.modalAbierto = true;
   }
 
-  cancelarEdicion(): void {
+  cerrarModal(): void {
+    if (this.guardando) return;
+    this.modalAbierto = false;
     this.editandoId = null;
     this.form = this.nuevoFormulario();
     this.prepararPlazaControlador();
     this.error = '';
+  }
+
+  cancelarEdicion(): void {
+    this.cerrarModal();
   }
 
   toggleRol(codigo: string): void {
@@ -171,6 +186,7 @@ export class ProductosComponent implements OnInit {
         this.mensaje = 'Producto creado correctamente.';
       }
 
+      this.modalAbierto = false;
       this.editandoId = null;
       this.form = this.nuevoFormulario();
       this.prepararPlazaControlador();
