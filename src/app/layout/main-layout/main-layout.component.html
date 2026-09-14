@@ -64,6 +64,14 @@
           <span class="nav-label">Administrar productos</span>
         </a>
       }
+
+      @if(has('TRABAJADORES') && auth.tieneRol('SUPERVISOR')){
+        <div class="group">USUARIOS</div>
+        <a routerLink="/usuarios/contrasenas" routerLinkActive="active" (click)="close()" data-tooltip="Contraseñas" aria-label="Administrar contraseñas">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 10a5 5 0 1 1 9.6 2H22v3h-2v2h-2v2h-4.4l-2.1-2.1A5 5 0 0 1 7 10Zm5-3a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg></span>
+          <span class="nav-label">Contraseñas</span>
+        </a>
+      }
     </nav>
 
     <button class="logout" type="button" (click)="logout()" data-tooltip="Cerrar sesión" aria-label="Cerrar sesión">
