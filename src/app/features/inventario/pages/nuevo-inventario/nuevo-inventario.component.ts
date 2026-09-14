@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 
@@ -16,6 +16,7 @@ import { InventarioApiService } from '../../services/inventario-api.service';
 })
 export class NuevoInventarioComponent implements OnInit {
   private readonly api = inject(InventarioApiService);
+  private readonly cdr = inject(ChangeDetectorRef);
   readonly auth = inject(AuthService);
 
   inventario: InventarioResumen | null = null;
@@ -42,6 +43,7 @@ export class NuevoInventarioComponent implements OnInit {
     if (this.cargando || this.inventarioId) return;
     this.cargando = true;
     this.limpiarMensajes();
+    this.refrescarVista();
 
     try {
       const inv = await firstValueFrom(this.api.iniciarInventario());
@@ -58,6 +60,7 @@ export class NuevoInventarioComponent implements OnInit {
       }
     } finally {
       this.cargando = false;
+      this.refrescarVista();
     }
   }
 
@@ -65,6 +68,7 @@ export class NuevoInventarioComponent implements OnInit {
     if (!this.inventarioId || this.guardando) return;
     this.guardando = true;
     this.limpiarMensajes();
+    this.refrescarVista();
 
     try {
       await this.guardarInterno();
@@ -73,6 +77,7 @@ export class NuevoInventarioComponent implements OnInit {
       this.error = this.extraerError(e);
     } finally {
       this.guardando = false;
+      this.refrescarVista();
     }
   }
 
@@ -96,6 +101,7 @@ export class NuevoInventarioComponent implements OnInit {
     if (!this.inventarioId || this.finalizando || !this.todosContados()) return;
     this.finalizando = true;
     this.limpiarMensajes();
+    this.refrescarVista();
 
     try {
       await this.guardarInterno();
@@ -110,6 +116,7 @@ export class NuevoInventarioComponent implements OnInit {
       this.error = this.extraerError(e);
     } finally {
       this.finalizando = false;
+      this.refrescarVista();
     }
   }
 
@@ -163,6 +170,7 @@ export class NuevoInventarioComponent implements OnInit {
 
   private async recuperarInventarioEnProceso(): Promise<void> {
     this.recuperando = true;
+    this.refrescarVista();
     const usuario = this.auth.usuario();
 
     try {
@@ -177,10 +185,11 @@ export class NuevoInventarioComponent implements OnInit {
       const abierto: InventarioResumen | undefined = pagina?.content?.[0];
       if (!abierto) return;
       await this.cargarInventario(abierto, true);
-    } catch {
-      // La pantalla sigue siendo utilizable aunque no exista un inventario por recuperar.
+    } catch (e: any) {
+      this.error = this.extraerError(e);
     } finally {
       this.recuperando = false;
+      this.refrescarVista();
     }
   }
 
@@ -200,6 +209,8 @@ export class NuevoInventarioComponent implements OnInit {
         // Si todavía no hay detalle guardado, las cantidades permanecen vacías.
       }
     }
+
+    this.refrescarVista();
   }
 
   private async guardarInterno(): Promise<InventarioDetalle> {
@@ -220,6 +231,10 @@ export class NuevoInventarioComponent implements OnInit {
   private limpiarMensajes(): void {
     this.error = '';
     this.mensaje = '';
+  }
+
+  private refrescarVista(): void {
+    this.cdr.detectChanges();
   }
 
   private extraerError(e: any): string {
