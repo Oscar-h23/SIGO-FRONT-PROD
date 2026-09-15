@@ -37,8 +37,7 @@ export class RelevoHistorialComponent implements OnInit {
       next:data=>{
         let items=(data??[]).map(i=>({...i,checklist:i.checklist??[],vias:i.vias??[]}));
         if(this.esOperador){
-          const u=this.auth.usuario();
-          items=items.filter(i=>i.plazaId===u?.plazaId);
+          items=this.filtrarHistorialOperador(items);
         }else if(this.plazaId){
           items=items.filter(i=>i.plazaId===this.plazaId);
         }
@@ -48,7 +47,7 @@ export class RelevoHistorialComponent implements OnInit {
       error:err=>{this.cargando.set(false);this.error.set(err?.error?.message??'No se pudo cargar el historial de relevos.');}
     });
   }
-  limpiarFiltros():void{const hoy=this.fechaHoy();this.inicio=hoy;this.fin=hoy;this.plazaId=null;this.buscar();}
+  limpiarFiltros():void{const hoy=this.fechaHoy();this.inicio=this.esOperador?this.fechaInicioVentanaOperador():hoy;this.fin=hoy;if(!this.esOperador)this.plazaId=null;this.buscar();}
   abrirDetalle(r:RelevoResponse):void{this.detalleSeleccionado.set(r);document.body.style.overflow='hidden';} cerrarDetalle():void{this.detalleSeleccionado.set(null);document.body.style.overflow='';}
   baseOperativa(r:RelevoResponse){return r.checklist.filter(i=>i.categoria==='BASE_OPERATIVA');} plazaPeaje(r:RelevoResponse){return r.checklist.filter(i=>i.categoria==='PLAZA_PEAJE');}
   totalVias(r:RelevoResponse){return r.vias?.length??0;} viasConObservacion(r:RelevoResponse){return r.vias?.filter(v=>v.estado==='OBSERVADO'||v.estado==='NO_OPERATIVO').length??0;} checklistConObservacion(r:RelevoResponse){return r.checklist?.filter(i=>i.estado==='OBSERVADO'||i.estado==='NO_OPERATIVO').length??0;}
@@ -67,6 +66,24 @@ export class RelevoHistorialComponent implements OnInit {
       if(relevo.resumen||relevo.observaciones){ y=this.ensureSpace(pdf,y,42,logo,relevo); this.tituloSeccion(pdf,'RESUMEN Y OBSERVACIONES',y); y+=8; if(relevo.resumen)y=this.cajaTexto(pdf,'Resumen',relevo.resumen,y); if(relevo.observaciones)y=this.cajaTexto(pdf,'Observaciones',relevo.observaciones,y); }
       await this.agregarEvidenciasPdf(pdf,relevo,logo); this.numerarPaginas(pdf); pdf.save(`relevo_${relevo.fecha}_${relevo.plazaCodigo}_turno_${relevo.turnoCodigo}.pdf`);
     } catch(err){console.error(err);this.error.set('No se pudo generar el PDF del relevo.');} finally{this.generandoPdfId.set(null);}
+  }
+
+  private filtrarHistorialOperador(items:RelevoResponse[]):RelevoResponse[]{
+    const u=this.auth.usuario();
+    if(!u?.trabajadorId||!u?.plazaId)return [];
+    const plaza=items.filter(i=>i.plazaId===u.plazaId).sort((a,b)=>this.fechaHoraNumero(b)-this.fechaHoraNumero(a));
+    const propios=plaza.filter(i=>i.operadorId===u.trabajadorId);
+    const ids=new Set(propios.map(i=>i.id));
+    const ultimoPropio=propios[0];
+    let anterior:RelevoResponse|undefined;
+    if(ultimoPropio){
+      const fechaUltimo=this.fechaHoraNumero(ultimoPropio);
+      anterior=plaza.find(i=>i.id!==ultimoPropio.id&&this.fechaHoraNumero(i)<fechaUltimo);
+    }else{
+      anterior=plaza[0];
+    }
+    if(anterior)ids.add(anterior.id);
+    return plaza.filter(i=>ids.has(i.id));
   }
 
   private encabezadoPdf(pdf:jsPDF,logo:string|null,relevo:RelevoResponse):void{
