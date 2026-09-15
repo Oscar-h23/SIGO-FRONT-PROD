@@ -8,7 +8,7 @@ export class MainLayoutComponent{
   if(this.esControlador())return m==='DASHBOARD'||m==='ASISTENCIA';
   return this.auth.tieneModulo(m)
  }
- puedeUsarChat(){return this.auth.tieneRol('SUPERVISOR')&&this.auth.tieneModulo('CHAT')}
+ puedeUsarChat(){return this.auth.tieneRol('SUPERVISOR','CONTROLADOR')&&this.auth.tieneModulo('CHAT')}
  toggleChat(){if(this.puedeUsarChat())this.chatOpen.update(v=>!v)}
  cerrarChat(){this.chatOpen.set(false)}
  toggle(){innerWidth<=900?this.sidebarOpen.update(v=>!v):this.collapsed.update(v=>!v)}
