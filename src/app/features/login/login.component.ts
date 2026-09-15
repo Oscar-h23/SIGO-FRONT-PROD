@@ -11,7 +11,13 @@ export class LoginComponent{
     this.loading.set(true);this.error.set('');
     try{
       await this.auth.login(this.codigo,this.password);
-      this.router.navigateByUrl(this.auth.requiereCambio()?'/cambiar-password':'/');
+      if(this.auth.requiereCambio()){
+        this.router.navigateByUrl('/cambiar-password');
+      }else if(this.auth.tieneRol('OPERADOR')){
+        this.router.navigateByUrl('/relevos/nuevo');
+      }else{
+        this.router.navigateByUrl('/');
+      }
     }catch(e:any){this.error.set(e?.error?.message??'No se pudo iniciar sesión.');}
     finally{this.loading.set(false);}
   }
