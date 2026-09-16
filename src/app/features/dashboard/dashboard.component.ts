@@ -78,7 +78,8 @@ export class DashboardComponent implements OnInit {
   readonly yTicks = [1, .75, .5, .25, 0];
 
   readonly esSupervisor = computed(() => this.auth.tieneRol('SUPERVISOR'));
-  readonly plazaBloqueada = computed(() => !this.esSupervisor() && !!this.auth.usuario()?.plazaId);
+  readonly puedeFiltrarTodasLasPlazas = computed(() => this.auth.tieneRol('SUPERVISOR', 'CONTROLADOR'));
+  readonly plazaBloqueada = computed(() => !this.puedeFiltrarTodasLasPlazas() && !!this.auth.usuario()?.plazaId);
   readonly nombreMes = computed(() => this.meses.find(item => item.id === this.mes())?.nombre ?? 'Mes');
   readonly nombreMesAnterior = computed(() => {
     const mesAnterior = this.mes() === 1 ? 12 : this.mes() - 1;
@@ -240,7 +241,7 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     const usuario = this.auth.usuario();
-    if (usuario?.rol !== 'SUPERVISOR' && usuario?.plazaId) this.plazaId.set(usuario.plazaId);
+    if (!this.puedeFiltrarTodasLasPlazas() && usuario?.plazaId) this.plazaId.set(usuario.plazaId);
     this.cargarInicial();
   }
 
