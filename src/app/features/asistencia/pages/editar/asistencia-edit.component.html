@@ -1,259 +1,41 @@
 <div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-5 sm:px-6 lg:px-8">
   <header class="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-    <div>
-      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">Gestión de asistencia</p>
-      <h1 class="mt-2 text-2xl font-semibold text-slate-950 sm:text-3xl">Editar asistencia</h1>
-      <p class="mt-2 text-sm text-slate-500">Modifica datos, ausencias y evidencias del registro.</p>
-    </div>
+    <div><p class="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">Gestión de asistencia</p><h1 class="mt-2 text-2xl font-semibold text-slate-950 sm:text-3xl">Editar asistencia</h1><p class="mt-2 text-sm text-slate-500">Modifica datos, ausencias y evidencias del registro.</p></div>
     <button type="button" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50" (click)="volver()">Volver</button>
   </header>
-
-  @if (loading()) {
-    <div class="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-sm">Cargando información...</div>
-  } @else {
-    @if (error()) {
-      <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{{ error() }}</div>
-    }
-    @if (success()) {
-      <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{{ success() }}</div>
-    }
-
+  @if (loading()) { <div class="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-sm">Cargando información...</div> } @else {
+    @if (error()) { <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{{ error() }}</div> }
+    @if (success()) { <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{{ success() }}</div> }
     <form class="space-y-6" (ngSubmit)="guardar()">
       <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 class="text-lg font-semibold text-slate-950">Información general</h2>
-        <p class="mt-1 text-sm text-slate-500">Actualiza los datos principales de la asistencia.</p>
-
+        <h2 class="text-lg font-semibold text-slate-950">Información general</h2><p class="mt-1 text-sm text-slate-500">Actualiza los datos principales de la asistencia.</p>
         <div class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <label class="space-y-2 text-sm font-medium text-slate-700">Plaza
-            <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" name="plaza" [(ngModel)]="plazaId" (ngModelChange)="cambiarPlaza()" [disabled]="saving() || loadingCatalogos()" required>
-              <option [ngValue]="null" disabled>Seleccione una plaza</option>
-              @for (plaza of plazas(); track plaza.id) { <option [ngValue]="plaza.id">{{ plaza.codigo }} @if (plaza.descripcion) { · {{ plaza.descripcion }} }</option> }
-            </select>
-          </label>
-
-          <label class="space-y-2 text-sm font-medium text-slate-700">Turno
-            <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" name="turno" [(ngModel)]="turnoId" (ngModelChange)="cambiarTurno()" [disabled]="saving() || loadingCatalogos()" required>
-              <option [ngValue]="null" disabled>Seleccione un turno</option>
-              @for (turno of turnos(); track turno.id) { <option [ngValue]="turno.id">{{ turno.codigo }} · {{ turno.nombre }}</option> }
-            </select>
-          </label>
-
-          <label class="space-y-2 text-sm font-medium text-slate-700">Controlador
-            <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-slate-100" name="controlador" [(ngModel)]="controladorId" [disabled]="saving() || loadingPersonal() || !plazaId" required>
-              <option [ngValue]="null" disabled>@if (loadingPersonal()) { Cargando controladores... } @else { Seleccione un controlador }</option>
-              @for (controlador of controladores(); track controlador.id) { <option [ngValue]="controlador.id">{{ controlador.codigo }} · {{ controlador.nombreCompleto }}</option> }
-            </select>
-          </label>
-
-          <label class="space-y-2 text-sm font-medium text-slate-700">Fecha
-            <input class="w-full rounded-xl border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" name="fecha" type="date" [(ngModel)]="fecha" [disabled]="saving()" required>
-          </label>
-        </div>
-      </section>
-
-      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 class="text-lg font-semibold text-slate-950">Personal</h2>
-        <p class="mt-1 text-sm text-slate-500">Ajusta programados, presentes y apoyo.</p>
-
-        <div class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <label class="space-y-2 text-sm font-medium text-slate-700">Programados
-            <input class="w-full rounded-xl border border-slate-300 px-3 py-2.5" name="programados" type="number" min="0" [(ngModel)]="programados" (ngModelChange)="cambiarPresentes()" [disabled]="saving()" required>
-          </label>
-          <label class="space-y-2 text-sm font-medium text-slate-700">Presentes
-            <input class="w-full rounded-xl border border-slate-300 px-3 py-2.5" name="presentes" type="number" min="0" [max]="programados" [(ngModel)]="presentes" (ngModelChange)="cambiarPresentes()" [disabled]="saving()" required>
-          </label>
-          <div class="rounded-2xl bg-slate-50 p-4"><span class="text-xs text-slate-500">Ausentes</span><strong class="mt-1 block text-2xl text-slate-950">{{ cantidadAusentes }}</strong></div>
-          <label class="space-y-2 text-sm font-medium text-slate-700">Apoyo solicitado
-            <input class="w-full rounded-xl border border-slate-300 px-3 py-2.5" name="apoyoSolicitado" type="number" min="0" [(ngModel)]="apoyoSolicitado" [disabled]="saving()" required>
-          </label>
-          <div class="rounded-2xl bg-blue-50 p-4"><span class="text-xs text-blue-600">Asistencia</span><strong class="mt-1 block text-2xl text-blue-700">@if (programados > 0) { {{ (presentes / programados * 100) | number:'1.0-2' }}% } @else { 0% }</strong></div>
-        </div>
-
-        @if (apoyoSolicitado > 0) {
-          <label class="mt-4 block space-y-2 text-sm font-medium text-slate-700">Detalle del apoyo
-            <textarea class="w-full rounded-xl border border-slate-300 px-3 py-2.5" name="detalleApoyo" rows="3" maxlength="500" [(ngModel)]="detalleApoyo" [disabled]="saving()"></textarea>
-          </label>
-        }
-      </section>
-
-      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <div class="flex items-center justify-between gap-3">
-          <div><h2 class="text-lg font-semibold text-slate-950">Ausencias</h2><p class="mt-1 text-sm text-slate-500">Registra trabajador, motivo y observación.</p></div>
-          <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{{ cantidadAusentes }} ausencia(s)</span>
-        </div>
-
-        @if (cantidadAusentes === 0) {
-          <div class="mt-5 rounded-2xl bg-slate-50 p-5 text-sm text-slate-500">No existen ausencias para este registro.</div>
-        } @else {
-          <div class="mt-5 space-y-4">
-            @for (ausencia of ausencias; track $index; let i = $index) {
-              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <strong class="text-sm text-slate-900">Ausencia {{ i + 1 }}</strong>
-                <div class="mt-4 grid gap-4 md:grid-cols-2">
-                  <label class="space-y-2 text-sm font-medium text-slate-700">Trabajador
-                    <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5" [name]="'trabajador-' + i" [(ngModel)]="ausencias[i].trabajadorId" [disabled]="saving() || loadingPersonal() || !plazaId" required>
-                      <option [ngValue]="0" disabled>Seleccione un trabajador</option>
-                      @for (trabajador of agentesDisponibles(i); track trabajador.id) { <option [ngValue]="trabajador.id">{{ trabajador.codigo }} · {{ trabajador.nombreCompleto }}</option> }
-                    </select>
-                  </label>
-                  <label class="space-y-2 text-sm font-medium text-slate-700">Motivo
-                    <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5" [name]="'motivo-' + i" [(ngModel)]="ausencias[i].motivoId" [disabled]="saving()" required>
-                      <option [ngValue]="0" disabled>Seleccione un motivo</option>
-                      @for (motivo of motivos(); track motivo.id) { <option [ngValue]="motivo.id">{{ motivo.nombre }}</option> }
-                    </select>
-                  </label>
-                </div>
-                <label class="mt-4 block space-y-2 text-sm font-medium text-slate-700">Observación
-                  <textarea class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5" [name]="'observacion-' + i" rows="2" maxlength="255" [(ngModel)]="ausencias[i].observacion" [disabled]="saving()"></textarea>
-                </label>
-              </div>
-            }
+          <label class="space-y-2 text-sm font-medium text-slate-700">Plaza<select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" name="plaza" [(ngModel)]="plazaId" (ngModelChange)="cambiarPlaza(); excepcionControladores.checked = false" [disabled]="saving() || loadingCatalogos()" required><option [ngValue]="null" disabled>Seleccione una plaza</option>@for (plaza of plazas(); track plaza.id) { <option [ngValue]="plaza.id">{{ plaza.codigo }} @if (plaza.descripcion) { · {{ plaza.descripcion }} }</option> }</select></label>
+          <label class="space-y-2 text-sm font-medium text-slate-700">Turno<select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" name="turno" [(ngModel)]="turnoId" (ngModelChange)="cambiarTurno()" [disabled]="saving() || loadingCatalogos()" required><option [ngValue]="null" disabled>Seleccione un turno</option>@for (turno of turnos(); track turno.id) { <option [ngValue]="turno.id">{{ turno.codigo }} · {{ turno.nombre }}</option> }</select></label>
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-slate-700">Controlador<select class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-slate-100" name="controlador" [(ngModel)]="controladorId" [disabled]="saving() || loadingPersonal() || !plazaId" required><option [ngValue]="null" disabled>@if (loadingPersonal()) { Cargando controladores... } @else { Seleccione un controlador }</option>@for (controlador of controladores(); track controlador.id) { @if (excepcionControladores.checked || controlador.plaza?.id === plazaId || controlador.id === controladorId) { <option [ngValue]="controlador.id">{{ controlador.codigo }} · {{ controlador.nombreCompleto }}</option> } }</select></label>
+            <label class="flex cursor-pointer items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-900"><input #excepcionControladores type="checkbox" class="mt-0.5 h-4 w-4 rounded border-amber-300" [disabled]="saving() || loadingPersonal() || !plazaId"><span><strong>Excepción:</strong> mostrar controladores de todas las plazas</span></label>
           </div>
-        }
-      </section>
-
-      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 class="text-lg font-semibold text-slate-950">Notas</h2>
-        <label class="mt-4 block"><textarea class="w-full rounded-xl border border-slate-300 px-3 py-2.5" name="notas" rows="4" [(ngModel)]="notas" [disabled]="saving()" placeholder="Observaciones generales"></textarea></label>
-      </section>
-
-      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <div class="flex items-center justify-between gap-3">
-          <div><h2 class="text-lg font-semibold text-slate-950">Evidencias actuales</h2><p class="mt-1 text-sm text-slate-500">Estas son las fotografías guardadas actualmente.</p></div>
-          <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{{ evidencias().length }} foto(s)</span>
-        </div>
-
-        @if (!evidencias().length) {
-          <div class="mt-5 rounded-2xl bg-slate-50 p-5 text-sm text-slate-500">Este registro no tiene fotografías.</div>
-        } @else {
-          <div class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            @for (evidencia of evidencias(); track evidencia.id) {
-              <article class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-                <a [href]="evidencia.urlArchivo" target="_blank" rel="noopener noreferrer"><img class="aspect-[10/7] w-full object-cover" [src]="evidencia.urlArchivo" alt="Evidencia de asistencia"></a>
-                <div class="flex items-center justify-between gap-3 p-4">
-                  <div><p class="text-sm font-semibold text-slate-900">{{ nombreTipoEvidencia(evidencia.tipo) }}</p><p class="text-xs text-slate-500">Evidencia guardada</p></div>
-                  <button type="button" class="rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50" (click)="solicitarEliminarEvidencia(evidencia)" [disabled]="saving()">Eliminar</button>
-                </div>
-              </article>
-            }
-          </div>
-        }
-      </section>
-
-      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 class="text-lg font-semibold text-slate-950">Cambiar o agregar fotografías</h2>
-        <p class="mt-1 text-sm text-slate-500">Selecciona el tipo de evidencia. Si ya existe una fotografía de ese tipo, la nueva la reemplazará al guardar.</p>
-
-        <div class="mt-5 rounded-2xl border border-blue-200 bg-blue-50 p-4">
-          <p class="text-sm font-semibold text-blue-900">También puedes pegar una imagen</p>
-          <p class="mt-1 text-sm text-blue-800">Haz clic en la tarjeta de destino y luego presiona <kbd class="rounded border border-blue-300 bg-white px-1.5 py-0.5 text-xs font-semibold">Ctrl + V</kbd> o <kbd class="rounded border border-blue-300 bg-white px-1.5 py-0.5 text-xs font-semibold">Cmd + V</kbd>. La tarjeta activa quedará marcada en azul.</p>
-        </div>
-
-        <div class="mt-5 grid gap-4 lg:grid-cols-3">
-          @for (item of [
-            { tipo: 'CALENTAMIENTO', titulo: 'Calentamiento' },
-            { tipo: 'INICIO_TURNO', titulo: 'Inicio de turno' },
-            { tipo: 'TAPONES_AUDITIVOS', titulo: 'Tapones auditivos' }
-          ]; track item.tipo) {
-            <article
-              class="cursor-pointer rounded-2xl border-2 p-4 transition"
-              [class.border-blue-500]="evidenciaPegadoActiva() === item.tipo"
-              [class.bg-blue-50]="evidenciaPegadoActiva() === item.tipo"
-              [class.border-slate-200]="evidenciaPegadoActiva() !== item.tipo"
-              [class.bg-slate-50]="evidenciaPegadoActiva() !== item.tipo"
-              (click)="activarPegado($any(item.tipo))"
-            >
-              <div class="flex items-start justify-between gap-3">
-                <div>
-                  <h3 class="text-sm font-semibold text-slate-950">{{ item.titulo }}</h3>
-                  @if (evidenciaExistentePorTipo($any(item.tipo))) {
-                    <p class="mt-1 text-xs font-medium text-amber-700">Ya existe una foto. La nueva la reemplazará.</p>
-                  } @else {
-                    <p class="mt-1 text-xs text-slate-500">No hay una foto guardada de este tipo.</p>
-                  }
-                </div>
-                @if (evidenciaPegadoActiva() === item.tipo) {
-                  <span class="rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-semibold text-white">Destino para pegar</span>
-                }
-              </div>
-
-              @if (archivoNuevoPorTipo($any(item.tipo)); as pendiente) {
-                <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-                  <p class="text-xs font-semibold text-emerald-800">Nueva foto lista para guardar</p>
-                  <p class="mt-1 truncate text-xs text-emerald-700">{{ pendiente.archivo.name }} · {{ pendiente.archivo.size / 1024 / 1024 | number:'1.1-2' }} MB</p>
-                </div>
-                <div class="mt-4 flex flex-wrap gap-2">
-                  <label class="cursor-pointer rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700" (click)="$event.stopPropagation()">Cambiar archivo<input class="hidden" type="file" accept="image/jpeg,image/png,image/webp" (change)="seleccionarArchivos($any(item.tipo), $event)"></label>
-                  <button type="button" class="rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600" (click)="$event.stopPropagation(); quitarArchivoNuevoPorTipo($any(item.tipo))">Quitar nueva</button>
-                </div>
-              } @else {
-                <div class="mt-4 rounded-xl border-2 border-dashed border-slate-300 bg-white p-4 text-center">
-                  <p class="text-xs font-medium text-slate-600">Haz clic en esta tarjeta y pega con Ctrl/Cmd+V</p>
-                  <div class="my-3 flex items-center gap-3 text-xs text-slate-400"><span class="h-px flex-1 bg-slate-200"></span>o<span class="h-px flex-1 bg-slate-200"></span></div>
-                  <label class="inline-flex cursor-pointer rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700" (click)="$event.stopPropagation()">Seleccionar archivo<input class="hidden" type="file" accept="image/jpeg,image/png,image/webp" (change)="seleccionarArchivos($any(item.tipo), $event)"></label>
-                </div>
-              }
-            </article>
-          }
+          <label class="space-y-2 text-sm font-medium text-slate-700">Fecha<input class="w-full rounded-xl border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" name="fecha" type="date" [(ngModel)]="fecha" [disabled]="saving()" required></label>
         </div>
       </section>
 
-      <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <button type="button" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700" (click)="volver()" [disabled]="saving()">Cancelar</button>
-        <button type="submit" class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50" [disabled]="saving() || uploading() || loadingPersonal()">@if (uploading()) { Reemplazando fotografías... } @else if (saving()) { Guardando... } @else { Guardar cambios }</button>
-      </div>
+      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><h2 class="text-lg font-semibold text-slate-950">Personal</h2><p class="mt-1 text-sm text-slate-500">Ajusta programados, presentes y apoyo.</p><div class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-5"><label class="space-y-2 text-sm font-medium text-slate-700">Programados<input class="w-full rounded-xl border border-slate-300 px-3 py-2.5" name="programados" type="number" min="0" [(ngModel)]="programados" (ngModelChange)="cambiarPresentes()" [disabled]="saving()" required></label><label class="space-y-2 text-sm font-medium text-slate-700">Presentes<input class="w-full rounded-xl border border-slate-300 px-3 py-2.5" name="presentes" type="number" min="0" [max]="programados" [(ngModel)]="presentes" (ngModelChange)="cambiarPresentes()" [disabled]="saving()" required></label><div class="rounded-2xl bg-slate-50 p-4"><span class="text-xs text-slate-500">Ausentes</span><strong class="mt-1 block text-2xl text-slate-950">{{ cantidadAusentes }}</strong></div><label class="space-y-2 text-sm font-medium text-slate-700">Apoyo solicitado<input class="w-full rounded-xl border border-slate-300 px-3 py-2.5" name="apoyoSolicitado" type="number" min="0" [(ngModel)]="apoyoSolicitado" [disabled]="saving()" required></label><div class="rounded-2xl bg-blue-50 p-4"><span class="text-xs text-blue-600">Asistencia</span><strong class="mt-1 block text-2xl text-blue-700">@if (programados > 0) { {{ (presentes / programados * 100) | number:'1.0-2' }}% } @else { 0% }</strong></div></div>@if (apoyoSolicitado > 0) { <label class="mt-4 block space-y-2 text-sm font-medium text-slate-700">Detalle del apoyo<textarea class="w-full rounded-xl border border-slate-300 px-3 py-2.5" name="detalleApoyo" rows="3" maxlength="500" [(ngModel)]="detalleApoyo" [disabled]="saving()"></textarea></label> }</section>
+
+      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div class="flex items-center justify-between gap-3"><div><h2 class="text-lg font-semibold text-slate-950">Ausencias</h2><p class="mt-1 text-sm text-slate-500">Registra trabajador, motivo y observación.</p></div><span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{{ cantidadAusentes }} ausencia(s)</span></div>@if (cantidadAusentes === 0) { <div class="mt-5 rounded-2xl bg-slate-50 p-5 text-sm text-slate-500">No existen ausencias para este registro.</div> } @else { <div class="mt-5 space-y-4">@for (ausencia of ausencias; track $index; let i = $index) { <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4"><strong class="text-sm text-slate-900">Ausencia {{ i + 1 }}</strong><div class="mt-4 grid gap-4 md:grid-cols-2"><label class="space-y-2 text-sm font-medium text-slate-700">Trabajador<select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5" [name]="'trabajador-' + i" [(ngModel)]="ausencias[i].trabajadorId" [disabled]="saving() || loadingPersonal() || !plazaId" required><option [ngValue]="0" disabled>Seleccione un trabajador</option>@for (trabajador of agentesDisponibles(i); track trabajador.id) { <option [ngValue]="trabajador.id">{{ trabajador.codigo }} · {{ trabajador.nombreCompleto }}</option> }</select></label><label class="space-y-2 text-sm font-medium text-slate-700">Motivo<select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5" [name]="'motivo-' + i" [(ngModel)]="ausencias[i].motivoId" [disabled]="saving()" required><option [ngValue]="0" disabled>Seleccione un motivo</option>@for (motivo of motivos(); track motivo.id) { <option [ngValue]="motivo.id">{{ motivo.nombre }}</option> }</select></label></div><label class="mt-4 block space-y-2 text-sm font-medium text-slate-700">Observación<textarea class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5" [name]="'observacion-' + i" rows="2" maxlength="255" [(ngModel)]="ausencias[i].observacion" [disabled]="saving()"></textarea></label></div> }</div> }</section>
+
+      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><h2 class="text-lg font-semibold text-slate-950">Notas</h2><label class="mt-4 block"><textarea class="w-full rounded-xl border border-slate-300 px-3 py-2.5" name="notas" rows="4" [(ngModel)]="notas" [disabled]="saving()" placeholder="Observaciones generales"></textarea></label></section>
+
+      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div class="flex items-center justify-between gap-3"><div><h2 class="text-lg font-semibold text-slate-950">Evidencias actuales</h2><p class="mt-1 text-sm text-slate-500">Estas son las fotografías guardadas actualmente.</p></div><span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{{ evidencias().length }} foto(s)</span></div>@if (!evidencias().length) { <div class="mt-5 rounded-2xl bg-slate-50 p-5 text-sm text-slate-500">Este registro no tiene fotografías.</div> } @else { <div class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">@for (evidencia of evidencias(); track evidencia.id) { <article class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"><a [href]="evidencia.urlArchivo" target="_blank" rel="noopener noreferrer"><img class="aspect-[10/7] w-full object-cover" [src]="evidencia.urlArchivo" alt="Evidencia de asistencia"></a><div class="flex items-center justify-between gap-3 p-4"><div><p class="text-sm font-semibold text-slate-900">{{ nombreTipoEvidencia(evidencia.tipo) }}</p><p class="text-xs text-slate-500">Evidencia guardada</p></div><button type="button" class="rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50" (click)="solicitarEliminarEvidencia(evidencia)" [disabled]="saving()">Eliminar</button></div></article> }</div> }</section>
+
+      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><h2 class="text-lg font-semibold text-slate-950">Cambiar o agregar fotografías</h2><p class="mt-1 text-sm text-slate-500">Selecciona el tipo de evidencia. Si ya existe una fotografía de ese tipo, la nueva la reemplazará al guardar.</p><div class="mt-5 rounded-2xl border border-blue-200 bg-blue-50 p-4"><p class="text-sm font-semibold text-blue-900">También puedes pegar una imagen</p><p class="mt-1 text-sm text-blue-800">Haz clic en la tarjeta de destino y luego presiona <kbd class="rounded border border-blue-300 bg-white px-1.5 py-0.5 text-xs font-semibold">Ctrl + V</kbd> o <kbd class="rounded border border-blue-300 bg-white px-1.5 py-0.5 text-xs font-semibold">Cmd + V</kbd>. La tarjeta activa quedará marcada en azul.</p></div><div class="mt-5 grid gap-4 lg:grid-cols-3">@for (item of [{ tipo: 'CALENTAMIENTO', titulo: 'Calentamiento' },{ tipo: 'INICIO_TURNO', titulo: 'Inicio de turno' },{ tipo: 'TAPONES_AUDITIVOS', titulo: 'Tapones auditivos' }]; track item.tipo) { <article class="cursor-pointer rounded-2xl border-2 p-4 transition" [class.border-blue-500]="evidenciaPegadoActiva() === item.tipo" [class.bg-blue-50]="evidenciaPegadoActiva() === item.tipo" [class.border-slate-200]="evidenciaPegadoActiva() !== item.tipo" [class.bg-slate-50]="evidenciaPegadoActiva() !== item.tipo" (click)="activarPegado($any(item.tipo))"><div class="flex items-start justify-between gap-3"><div><h3 class="text-sm font-semibold text-slate-950">{{ item.titulo }}</h3>@if (evidenciaExistentePorTipo($any(item.tipo))) { <p class="mt-1 text-xs font-medium text-amber-700">Ya existe una foto. La nueva la reemplazará.</p> } @else { <p class="mt-1 text-xs text-slate-500">No hay una foto guardada de este tipo.</p> }</div>@if (evidenciaPegadoActiva() === item.tipo) { <span class="rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-semibold text-white">Destino para pegar</span> }</div>@if (archivoNuevoPorTipo($any(item.tipo)); as pendiente) { <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3"><p class="text-xs font-semibold text-emerald-800">Nueva imagen preparada</p><p class="mt-1 truncate text-xs text-emerald-700">{{ pendiente.archivo.name }}</p><button type="button" class="mt-2 text-xs font-semibold text-red-600" (click)="$event.stopPropagation(); quitarArchivoNuevoPorTipo($any(item.tipo))">Quitar</button></div> }<label class="mt-4 block" (click)="$event.stopPropagation()"><input class="hidden" type="file" accept="image/jpeg,image/png,image/webp" (change)="seleccionarArchivos($any(item.tipo), $event)" [disabled]="saving() || uploading()"><span class="block cursor-pointer rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50">Seleccionar imagen</span></label></article> }</div></section>
+
+      <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><button type="button" class="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700" (click)="volver()" [disabled]="saving()">Cancelar</button><button type="submit" class="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60" [disabled]="saving() || uploading() || loadingProgramados()">@if (saving() || uploading()) { Guardando... } @else { Guardar cambios }</button></div>
     </form>
   }
-
-  <app-image-cropper-modal
-    [visible]="cropperVisible()"
-    [imageFile]="cropperFile()"
-    titulo="Ajustar fotografía para el reporte"
-    (cancelar)="onCropperCancel()"
-    (confirmar)="onCropperConfirm($event)">
-  </app-image-cropper-modal>
-
-  @if (confirmGuardarVisible()) {
-    <div class="fixed inset-0 z-[10000] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm" (click)="cancelarConfirmacionGuardar()">
-      <section class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-        <div class="grid h-12 w-12 place-items-center rounded-2xl bg-amber-100 text-xl font-bold text-amber-700">!</div>
-        <h2 class="mt-4 text-xl font-semibold text-slate-950">¿Guardar estos cambios?</h2>
-        <p class="mt-2 text-sm leading-6 text-slate-500">Se actualizará la asistencia. Las nuevas fotografías reemplazarán cualquier evidencia existente del mismo tipo.</p>
-        @if (archivosNuevos.length > 0) {
-          <div class="mt-4 rounded-2xl bg-amber-50 p-4 text-sm text-amber-800">
-            <strong>{{ archivosNuevos.length }}</strong> evidencia(s) será(n) reemplazada(s) o agregada(s).
-          </div>
-        }
-        <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-          <button type="button" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50" (click)="cancelarConfirmacionGuardar()">Volver y revisar</button>
-          <button type="button" class="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700" (click)="confirmarGuardar()">Sí, guardar cambios</button>
-        </div>
-      </section>
-    </div>
-  }
-
-  @if (evidenciaEliminarPendiente(); as evidencia) {
-    <div class="fixed inset-0 z-[10000] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm" (click)="cancelarEliminarEvidencia()">
-      <section class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-        <div class="grid h-12 w-12 place-items-center rounded-2xl bg-red-100 text-xl font-bold text-red-700">!</div>
-        <h2 class="mt-4 text-xl font-semibold text-slate-950">¿Eliminar esta evidencia?</h2>
-        <p class="mt-2 text-sm leading-6 text-slate-500">Se eliminará la fotografía de <strong>{{ nombreTipoEvidencia(evidencia.tipo) }}</strong>. Esta acción no se puede deshacer.</p>
-        <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-          <button type="button" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700" (click)="cancelarEliminarEvidencia()">Cancelar</button>
-          <button type="button" class="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700" (click)="confirmarEliminarEvidencia()">Sí, eliminar</button>
-        </div>
-      </section>
-    </div>
-  }
-
-  @if (successModalVisible()) {
-    <div class="fixed inset-0 z-[10000] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm">
-      <section class="w-full max-w-md rounded-3xl bg-white p-6 text-center shadow-2xl" role="dialog" aria-modal="true">
-        <div class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-2xl font-bold text-emerald-700">✓</div>
-        <h2 class="mt-4 text-xl font-semibold text-slate-950">Cambios guardados</h2>
-        <p class="mt-2 text-sm leading-6 text-slate-500">La asistencia se actualizó correctamente. Las fotografías nuevas ya reemplazaron las evidencias anteriores del mismo tipo.</p>
-        <button type="button" class="mt-6 w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700" (click)="cerrarSuccessModal()">Entendido</button>
-      </section>
-    </div>
-  }
 </div>
+
+@if (cropperVisible() && cropperFile()) { <app-image-cropper-modal [file]="cropperFile()!" (confirm)="onCropperConfirm($event)" (cancel)="onCropperCancel()"></app-image-cropper-modal> }
+@if (confirmGuardarVisible()) { <div class="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/50 p-4"><div class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl"><h3 class="text-xl font-semibold text-slate-950">Confirmar cambios</h3><p class="mt-2 text-sm text-slate-600">¿Deseas guardar las modificaciones realizadas en esta asistencia?</p><div class="mt-6 flex justify-end gap-3"><button type="button" class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700" (click)="cancelarConfirmacionGuardar()">Cancelar</button><button type="button" class="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white" (click)="confirmarGuardar()">Sí, guardar</button></div></div></div> }
+@if (successModalVisible()) { <div class="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/50 p-4"><div class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl"><h3 class="text-xl font-semibold text-slate-950">Cambios guardados</h3><p class="mt-2 text-sm text-slate-600">La asistencia se actualizó correctamente.</p><div class="mt-6 flex justify-end"><button type="button" class="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white" (click)="cerrarSuccessModal()">Aceptar</button></div></div></div> }
+@if (evidenciaEliminarPendiente()) { <div class="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/50 p-4"><div class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl"><h3 class="text-xl font-semibold text-slate-950">Eliminar evidencia</h3><p class="mt-2 text-sm text-slate-600">¿Deseas eliminar esta fotografía del registro?</p><div class="mt-6 flex justify-end gap-3"><button type="button" class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700" (click)="cancelarEliminarEvidencia()">Cancelar</button><button type="button" class="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white" (click)="confirmarEliminarEvidencia()">Eliminar</button></div></div></div> }
