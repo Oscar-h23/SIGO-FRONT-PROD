@@ -1,0 +1,86 @@
+<section class="page">
+  <header class="page-head">
+    <div>
+      <span class="eyebrow">PROGRAMACIÓN</span>
+      <h1>Programación mensual de turnos</h1>
+      <p>Asigna turnos, descansos y estados especiales. Los controladores solo distribuyen casetas.</p>
+    </div>
+    <button class="primary" type="button" (click)="guardar()" [disabled]="guardando||cambios.size===0">
+      {{guardando?'Guardando...':'Guardar cambios'}}
+      @if(cambios.size){<span class="badge">{{cambios.size}}</span>}
+    </button>
+  </header>
+
+  <section class="filters">
+    <label>Plaza
+      <select [(ngModel)]="plazaId" (ngModelChange)="cargar()">
+        @for(p of plazas;track p.id){<option [ngValue]="p.id">{{p.codigo}} · {{p.descripcion||''}}</option>}
+      </select>
+    </label>
+    <label>Mes
+      <input type="month" [ngModel]="mesInput" (ngModelChange)="cambiarMes($event)">
+    </label>
+    <label class="search">Buscar agente
+      <input [(ngModel)]="busqueda" placeholder="Código o nombre">
+    </label>
+  </section>
+
+  @if(error){<div class="alert error">{{error}}</div>}
+  @if(mensaje){<div class="alert success">{{mensaje}}</div>}
+
+  <section class="card">
+    <div class="card-head">
+      <div><h2>{{nombreMes()}}</h2><p>{{agentes.length}} agentes · {{dias.length}} días</p></div>
+      <div class="legend">
+        @for(e of estados;track e){<span [class]="claseEstado(e)">{{e}}</span>}
+      </div>
+    </div>
+
+    @if(cargando){
+      <div class="empty">Cargando programación...</div>
+    }@else{
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th class="sticky-name">Agente</th><th class="sticky-code">Código</th>
+            @for(d of dias;track d){<th>{{d}}</th>}
+          </tr></thead>
+          <tbody>
+            @for(a of agentesFiltrados;track a.id){
+              <tr>
+                <td class="sticky-name"><strong>{{a.nombreCompleto}}</strong></td>
+                <td class="sticky-code">{{a.codigo}}</td>
+                @for(d of dias;track d){
+                  <td class="cell">
+                    <select [ngModel]="estado(a.id,d)" (ngModelChange)="cambiarEstado(a.id,d,$event)" [class]="claseEstado(estado(a.id,d))">
+                      <option [ngValue]="null">-</option>
+                      @for(e of estados;track e){<option [ngValue]="e">{{e}}</option>}
+                    </select>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <div><h2>Líder fijo por agente</h2><p>El líder permanece aunque el controlador rote de turno.</p></div>
+    </div>
+    <div class="leader-grid">
+      @for(a of agentesFiltrados;track a.id){
+        <article class="leader-row">
+          <div class="agent"><strong>{{a.nombreCompleto}}</strong><span>Cód. {{a.codigo}}</span></div>
+          <select [(ngModel)]="liderSeleccionado[a.id]">
+            <option [ngValue]="null">Sin líder</option>
+            @for(c of controladores;track c.id){<option [ngValue]="c.id">{{c.nombreCompleto}}</option>}
+          </select>
+          <button class="secondary" type="button" (click)="guardarLider(a)">Actualizar</button>
+        </article>
+      }
+    </div>
+  </section>
+</section>
