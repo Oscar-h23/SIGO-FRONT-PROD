@@ -1,0 +1,53 @@
+<section class="schedule-page">
+  <header class="agent-head">
+    <div>
+      <span class="eyebrow">MI PROGRAMACIÓN</span>
+      <h1>Mi horario semanal</h1>
+      <p>Consulta tu turno, estado y caseta asignada para cada día.</p>
+    </div>
+    @if(horario){
+      <div class="profile">
+        <div class="avatar">{{horario.nombre.slice(0,1)}}</div>
+        <div>
+          <strong>{{horario.nombre}}</strong>
+          <span>Cód. {{horario.codigo}} · {{horario.plazaCodigo||'Sin plaza'}}</span>
+          <span>Líder: {{horario.lider||'Sin asignar'}}</span>
+        </div>
+      </div>
+    }
+  </header>
+
+  @if(error){<div class="alert">{{error}}</div>}
+
+  <section class="week-card">
+    <div class="week-nav">
+      <button type="button" (click)="anterior()">← Anterior</button>
+      <div><span>SEMANA</span><strong>{{tituloSemana}}</strong></div>
+      <button type="button" class="next" (click)="siguiente()">Siguiente →</button>
+    </div>
+
+    @if(cargando){
+      <div class="loading">Cargando horario...</div>
+    }@else if(horario){
+      <div class="week-grid">
+        @for(d of horario.dias;track d.fecha){
+          <article class="day">
+            <div class="day-top"><span>{{diaSemana(d)}}</span><strong>{{diaNumero(d)}}</strong></div>
+            <div [class]="'status '+clase(d.estado)">{{label(d.estado)}}</div>
+            @if(operativo(d.estado)){
+              <div class="booth"><span>Ubicación</span><strong>{{d.ubicacionCodigo||'Pendiente'}}</strong><small>{{d.ubicacionNombre||'Sin asignar'}}</small></div>
+            }@else{
+              <div class="no-booth">Sin asignación de caseta</div>
+            }
+          </article>
+        }
+      </div>
+    }
+  </section>
+
+  <div class="legend">
+    <span><i class="estado-a"></i>A</span><span><i class="estado-b"></i>B</span><span><i class="estado-c"></i>C</span>
+    <span><i class="estado-d"></i>Descanso</span><span><i class="estado-v"></i>Vacaciones</span>
+    <span><i class="estado-com"></i>Compensación</span><span><i class="estado-dm"></i>Desc. médico</span><span><i class="estado-lic"></i>Licencia</span>
+  </div>
+</section>
