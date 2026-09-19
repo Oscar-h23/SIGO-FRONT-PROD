@@ -1,0 +1,91 @@
+<section class="page">
+  <header class="page-head">
+    <div>
+      <span class="eyebrow">DISTRIBUCIÓN</span>
+      <h1>Asignación diaria de casetas</h1>
+      <p>Los turnos vienen del Supervisor. Aquí se asigna únicamente la ubicación de cada agente.</p>
+    </div>
+    <button class="primary" type="button" (click)="guardar()" [disabled]="guardando||cambios.size===0">
+      {{guardando?'Guardando...':'Guardar distribución'}}
+      @if(cambios.size){<span class="badge">{{cambios.size}}</span>}
+    </button>
+  </header>
+
+  <section class="filters">
+    @if(esSupervisor){
+      <label>Plaza
+        <select [(ngModel)]="plazaId" (ngModelChange)="cargar()">
+          @for(p of plazas;track p.id){<option [ngValue]="p.id">{{p.codigo}} · {{p.descripcion||''}}</option>}
+        </select>
+      </label>
+    }@else{
+      <label>Plaza<input [value]="auth.usuario()?.plaza||'Sin plaza'" disabled></label>
+    }
+    <label>Mes<input type="month" [ngModel]="mesInput" (ngModelChange)="cambiarMes($event)"></label>
+    <label class="search">Buscar agente<input [(ngModel)]="busqueda" placeholder="Código o nombre"></label>
+  </section>
+
+  @if(error){<div class="alert error">{{error}}</div>}
+  @if(mensaje){<div class="alert success">{{mensaje}}</div>}
+
+  <div class="main-grid">
+    <section class="card">
+      <div class="card-head"><div><h2>Distribución mensual</h2><p>A, B y C permiten caseta; los demás estados quedan bloqueados.</p></div></div>
+      @if(cargando){
+        <div class="empty">Cargando distribución...</div>
+      }@else{
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th class="sticky-name">Agente</th><th class="sticky-code">Código</th>@for(d of dias;track d){<th>{{d}}</th>}</tr></thead>
+            <tbody>
+              @for(a of agentesFiltrados;track a.id){
+                <tr [class.selected]="seleccionado===a.id">
+                  <td class="sticky-name"><button class="name-btn" type="button" (click)="seleccionar(a.id)">{{a.nombreCompleto}}</button></td>
+                  <td class="sticky-code">{{a.codigo}}</td>
+                  @for(d of dias;track d){
+                    @let p=programacion(a.id,d);
+                    <td class="cell">
+                      @if(p){
+                        <span [class]="'shift '+claseEstado(p.estado)">{{p.estado}}</span>
+                        <select [disabled]="!esOperativo(p.estado)" [ngModel]="asignacion(p.programacionId)" (ngModelChange)="cambiar(p.programacionId,$event)">
+                          <option [ngValue]="null">-</option>
+                          @for(u of ubicaciones;track u.id){<option [ngValue]="u.id">{{u.codigo}}</option>}
+                        </select>
+                      }@else{<span class="no-program">—</span>}
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <aside class="card summary">
+      <span class="eyebrow">RESUMEN MENSUAL</span>
+      @if(resumen){
+        <h2>{{resumen.nombre}}</h2><p>Código {{resumen.codigo}}</p>
+        @if(resumen.ubicaciones.length){
+          @for(u of resumen.ubicaciones;track u.codigo){
+            <div class="summary-row"><span>{{u.codigo}}</span><strong>{{u.veces}}</strong></div>
+          }
+        }@else{<div class="empty small">Sin asignaciones guardadas.</div>}
+      }@else{<div class="empty">Selecciona un agente.</div>}
+    </aside>
+  </div>
+
+  <section class="card coverage">
+    <div class="card-head"><div><h2>Cobertura por caseta / día</h2><p>Conteo automático de agentes asignados por ubicación.</p></div></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="coverage-name">Ubicación</th>@for(d of dias;track d){<th>{{d}}</th>}</tr></thead>
+        <tbody>
+          @for(u of cobertura;track u.ubicacionId){
+            <tr><td class="coverage-name"><strong>{{u.codigo}}</strong><small>{{u.nombre}}</small></td>@for(d of dias;track d){<td [class.hot]="count(u,d)>=2">{{count(u,d)}}</td>}</tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
