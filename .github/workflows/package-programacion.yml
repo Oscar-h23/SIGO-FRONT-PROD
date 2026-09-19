@@ -1,0 +1,41 @@
+name: Package Programacion Frontend
+
+on:
+  push:
+    branches:
+      - chatgpt/programacion-distribucion-local
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Build complete ZIP
+        run: |
+          rm -f SIGO-FRONT-PROD-programacion-completo.zip
+          zip -r SIGO-FRONT-PROD-programacion-completo.zip .             -x ".git/*"             -x "node_modules/*"             -x "dist/*"             -x ".angular/*"             -x "SIGO-FRONT-PROD-programacion-completo.zip"
+
+      - name: Upload complete frontend
+        uses: actions/upload-artifact@v4
+        with:
+          name: sigo-front-programacion-completo
+          path: SIGO-FRONT-PROD-programacion-completo.zip
+          if-no-files-found: error
