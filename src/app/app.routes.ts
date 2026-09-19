@@ -6,6 +6,9 @@ export const routes:Routes=[
  {path:'',component:MainLayoutComponent,canActivate:[authGuard,passwordChangedGuard],children:[
   {path:'',pathMatch:'full',redirectTo:'dashboard'},
   {path:'dashboard',canActivate:[moduleGuard('DASHBOARD')],loadComponent:()=>import('./features/dashboard/dashboard.component').then(m=>m.DashboardComponent)},
+  {path:'programacion/turnos',canActivate:[moduleGuard('PROGRAMACION'),roleGuard('SUPERVISOR')],loadComponent:()=>import('./features/programacion/pages/supervisor/programacion-supervisor.component').then(m=>m.ProgramacionSupervisorComponent)},
+  {path:'programacion/distribucion',canActivate:[moduleGuard('DISTRIBUCION'),roleGuard('SUPERVISOR','CONTROLADOR')],loadComponent:()=>import('./features/programacion/pages/controlador/distribucion-controlador.component').then(m=>m.DistribucionControladorComponent)},
+  {path:'programacion/mi-horario',canActivate:[moduleGuard('MI_HORARIO'),roleGuard('SUPERVISOR','CONTROLADOR','OPERADOR')],loadComponent:()=>import('./features/programacion/pages/agente/mi-horario.component').then(m=>m.MiHorarioComponent)},
   {path:'asistencia/registrar',canActivate:[moduleGuard('ASISTENCIA')],loadComponent:()=>import('./features/asistencia/pages/registrar/asistencia-form.component').then(m=>m.AsistenciaFormComponent)},
   {path:'asistencia/historial',canActivate:[moduleGuard('ASISTENCIA')],loadComponent:()=>import('./features/asistencia/pages/historial/asistencia-history.component').then(m=>m.AsistenciaHistoryComponent)},
   {path:'asistencia/historial/editar/:id',canActivate:[moduleGuard('ASISTENCIA')],loadComponent:()=>import('./features/asistencia/pages/editar/asistencia-edit.component').then(m=>m.AsistenciaEditComponent)},
